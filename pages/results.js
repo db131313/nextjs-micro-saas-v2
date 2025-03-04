@@ -1,46 +1,50 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 
+// Use your provided API keys:
 const API_KEY = "AIzaSyDlc54LBF2pEDWQiC7JUG7kB5PaFsoytAE";
 const SEARCH_ENGINE_ID = "615b8aae2d40343b8";
 
 export default function Results() {
   const router = useRouter();
   const { query } = router.query;
+
+  // Search result state
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   // ----- Grid & Link Card Controls -----
-  // Default grid layout set to masonry vertical
-  const [gridLayout, setGridLayout] = useState("masonry-vertical"); // "simple-grid", "masonry-vertical", "masonry-horizontal"
-  const [linkCardHeight, setLinkCardHeight] = useState(250); // in px
-  const [linkCardWidth, setLinkCardWidth] = useState(250); // in px (used for simple grid or horizontal masonry)
-  const [gridGap, setGridGap] = useState(10); // in px
-  const [cardBorderRadius, setCardBorderRadius] = useState(8); // in px
-  const [cardBorderWidth, setCardBorderWidth] = useState(1); // in px
+  // Default grid layout is "masonry-vertical"
+  const [gridLayout, setGridLayout] = useState("masonry-vertical"); // Options: "simple-grid", "masonry-vertical", "masonry-horizontal"
+  const [linkCardHeight, setLinkCardHeight] = useState(250); // px
+  const [linkCardWidth, setLinkCardWidth] = useState(250); // px (used for simple grid/horizontal layout)
+  const [gridGap, setGridGap] = useState(10); // px
+  const [cardBorderRadius, setCardBorderRadius] = useState(8); // px
+  const [cardBorderWidth, setCardBorderWidth] = useState(1); // px
   const [cardBorderColor, setCardBorderColor] = useState("#d1d5db");
 
-  // ----- Link Text & Card Content Controls -----
+  // ----- Link Text & Content Styling Controls -----
   const [linkFontFamily, setLinkFontFamily] = useState("Arial, sans-serif");
   const [linkFontWeight, setLinkFontWeight] = useState("400");
   const [linkFontColor, setLinkFontColor] = useState("#ffffff");
-  const [linkTextPosition, setLinkTextPosition] = useState("bottom"); // "top", "middle", "bottom"
-  // Use a semi‑transparent background for text readability over images
+  const [linkTextPosition, setLinkTextPosition] = useState("bottom"); // Options: "top", "middle", "bottom"
   const [linkBackgroundColor, setLinkBackgroundColor] = useState("rgba(0,0,0,0.4)");
-  const [linkPadding, setLinkPadding] = useState(10); // in px
+  const [linkPadding, setLinkPadding] = useState(10); // px
 
   // ----- Full Page Background Controls -----
   const [bgColor, setBgColor] = useState("#111111");
-  const [bgGradient, setBgGradient] = useState(""); // preset gradient string
-  const [bgImage, setBgImage] = useState(null); // URL for uploaded background image
-  const [bgVideo, setBgVideo] = useState(""); // YouTube video URL
+  const [bgGradient, setBgGradient] = useState(""); // e.g. "linear-gradient(45deg, #ff6b6b, #f06595)"
+  const [bgImage, setBgImage] = useState(null); // URL of uploaded background image
+  const [bgVideo, setBgVideo] = useState(""); // YouTube embed URL
 
-  // Dropdown panel toggle for styling controls
+  // Control panel toggle
   const [panelOpen, setPanelOpen] = useState(false);
 
+  // Ref for background video iframe
   const videoRef = useRef(null);
 
+  // Fetch search results (images) when query changes
   useEffect(() => {
     if (query) {
       fetchGoogleImages(query);
@@ -69,6 +73,7 @@ export default function Results() {
     setLoading(false);
   };
 
+  // Handle background image upload
   const handleBgImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -77,26 +82,24 @@ export default function Results() {
     }
   };
 
-  // Define full-page background style
+  // ----- Dynamic Styles ----- 
+
+  // Full-page background style
   const backgroundStyle = {
     backgroundColor: bgColor,
-    backgroundImage: bgGradient
-      ? bgGradient
-      : bgImage
-      ? `url(${bgImage})`
-      : "none",
+    backgroundImage: bgGradient ? bgGradient : bgImage ? `url(${bgImage})` : "none",
     backgroundSize: bgImage ? "cover" : "auto",
     backgroundRepeat: "no-repeat",
     backgroundPosition: "center",
   };
 
-  // Define grid container style based on gridLayout
+  // Grid container style based on chosen layout
   let gridContainerStyle = { gap: `${gridGap}px` };
   if (gridLayout === "simple-grid") {
     gridContainerStyle.display = "grid";
     gridContainerStyle.gridTemplateColumns = `repeat(auto-fill, minmax(${linkCardWidth}px, 1fr))`;
   } else if (gridLayout === "masonry-vertical") {
-    gridContainerStyle.columnCount = 3; // adjust as needed
+    gridContainerStyle.columnCount = 3; // Fixed column count for vertical masonry
     gridContainerStyle.columnGap = `${gridGap}px`;
   } else if (gridLayout === "masonry-horizontal") {
     gridContainerStyle.display = "flex";
@@ -105,17 +108,21 @@ export default function Results() {
     gridContainerStyle.gap = `${gridGap}px`;
   }
 
-  // Card container style – note: no inner image sizing here, handled below
+  // Link card style
   const cardStyle = {
-    width: gridLayout === "simple-grid" ? "100%" : `${linkCardWidth}px`,
+    width:
+      gridLayout === "simple-grid" || gridLayout === "masonry-horizontal"
+        ? `${linkCardWidth}px`
+        : "100%",
     height: `${linkCardHeight}px`,
     borderRadius: `${cardBorderRadius}px`,
     border: `${cardBorderWidth}px solid ${cardBorderColor}`,
     position: "relative",
     overflow: "hidden",
+    marginBottom: gridLayout === "masonry-vertical" ? `${gridGap}px` : undefined,
   };
 
-  // Overlay for link text, placed at the bottom (or as configured)
+  // Overlay style for link text
   const overlayStyle = {
     position: "absolute",
     left: 0,
@@ -136,7 +143,7 @@ export default function Results() {
     zIndex: 10,
   };
 
-  // Helper function to get favicon using Google's favicon service
+  // Helper: get favicon URL using Google's favicon service
   const getFaviconUrl = (url) => {
     try {
       const { hostname } = new URL(url);
@@ -164,13 +171,14 @@ export default function Results() {
         </div>
       )}
 
-      <div className="flex flex-col items-center justify-center text-white p-6 relative z-10">
-        {/* Toggleable Styling Controls Panel */}
+      <div className="relative z-10 flex flex-col items-center text-white p-6">
+        {/* Styling Controls Panel Toggle */}
         <div className="absolute top-4 right-4 z-50">
           <button
             onClick={() => setPanelOpen(!panelOpen)}
-            className="p-2 bg-white text-black rounded-full shadow-lg border border-gray-300"
+            className="p-2 bg-white text-black rounded-full shadow border border-gray-300"
           >
+            {/* Inline gear icon */}
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
@@ -184,7 +192,7 @@ export default function Results() {
             </svg>
           </button>
           {panelOpen && (
-            <div className="mt-2 bg-white text-black p-4 rounded-lg shadow-lg w-80 border border-gray-300 overflow-y-auto max-h-[90vh]">
+            <div className="mt-2 bg-white text-black p-4 rounded shadow border border-gray-300 max-h-[90vh] overflow-y-auto w-80">
               <h3 className="text-lg font-bold mb-2">Customize View</h3>
 
               {/* Grid Layout & Dimensions */}
@@ -208,21 +216,25 @@ export default function Results() {
                   min="100"
                   max="500"
                   value={linkCardHeight}
-                  onChange={(e) => setLinkCardHeight(e.target.value)}
+                  onChange={(e) => setLinkCardHeight(Number(e.target.value))}
                   className="w-full mb-2"
                 />
 
-                <label className="block text-sm mb-1">
-                  Link Card Width: {linkCardWidth}px
-                </label>
-                <input
-                  type="range"
-                  min="100"
-                  max="500"
-                  value={linkCardWidth}
-                  onChange={(e) => setLinkCardWidth(e.target.value)}
-                  className="w-full mb-2"
-                />
+                {gridLayout !== "masonry-vertical" && (
+                  <>
+                    <label className="block text-sm mb-1">
+                      Link Card Width: {linkCardWidth}px
+                    </label>
+                    <input
+                      type="range"
+                      min="100"
+                      max="500"
+                      value={linkCardWidth}
+                      onChange={(e) => setLinkCardWidth(Number(e.target.value))}
+                      className="w-full mb-2"
+                    />
+                  </>
+                )}
 
                 <label className="block text-sm mb-1">Grid Gap: {gridGap}px</label>
                 <input
@@ -230,7 +242,7 @@ export default function Results() {
                   min="0"
                   max="50"
                   value={gridGap}
-                  onChange={(e) => setGridGap(e.target.value)}
+                  onChange={(e) => setGridGap(Number(e.target.value))}
                   className="w-full mb-2"
                 />
               </div>
@@ -245,7 +257,7 @@ export default function Results() {
                   min="0"
                   max="50"
                   value={cardBorderRadius}
-                  onChange={(e) => setCardBorderRadius(e.target.value)}
+                  onChange={(e) => setCardBorderRadius(Number(e.target.value))}
                   className="w-full mb-2"
                 />
 
@@ -257,7 +269,7 @@ export default function Results() {
                   min="0"
                   max="10"
                   value={cardBorderWidth}
-                  onChange={(e) => setCardBorderWidth(e.target.value)}
+                  onChange={(e) => setCardBorderWidth(Number(e.target.value))}
                   className="w-full mb-2"
                 />
 
@@ -341,7 +353,7 @@ export default function Results() {
                   min="0"
                   max="50"
                   value={linkPadding}
-                  onChange={(e) => setLinkPadding(e.target.value)}
+                  onChange={(e) => setLinkPadding(Number(e.target.value))}
                   className="w-full mb-2"
                 />
               </div>
@@ -383,9 +395,7 @@ export default function Results() {
                   </option>
                 </select>
 
-                <label className="block text-sm mb-1">
-                  Background Image:
-                </label>
+                <label className="block text-sm mb-1">Background Image:</label>
                 <input
                   type="file"
                   accept="image/*"
@@ -416,9 +426,7 @@ export default function Results() {
           className="w-full max-w-md p-4 border border-gray-300 rounded-lg mb-4 text-black"
           onKeyPress={(e) => {
             if (e.key === "Enter") {
-              router.push(
-                `/results?query=${encodeURIComponent(e.target.value)}`
-              );
+              router.push(`/results?query=${encodeURIComponent(e.target.value)}`);
             }
           }}
         />
@@ -429,7 +437,7 @@ export default function Results() {
         {loading && <p className="text-gray-400">Loading results...</p>}
         {error && <p className="text-red-500">{error}</p>}
 
-        {/* Results Grid: full width container */}
+        {/* Results Grid Container (full-width) */}
         <div style={gridContainerStyle} className="w-full">
           {searchResults.length > 0 ? (
             searchResults.map((result, index) => (
@@ -437,8 +445,9 @@ export default function Results() {
                 key={index}
                 href={result.image.contextLink}
                 style={cardStyle}
-                className="mb-4 break-inside-avoid relative"
+                className="break-inside-avoid relative"
               >
+                {/* Full-background image */}
                 {result.link && (
                   <img
                     src={result.link}
@@ -453,6 +462,7 @@ export default function Results() {
                     }}
                   />
                 )}
+                {/* Overlay with favicon and truncated text */}
                 <div style={overlayStyle} className="relative z-10 flex items-center">
                   {result.image && result.image.contextLink && (
                     <img
@@ -461,7 +471,7 @@ export default function Results() {
                       style={{ width: "16px", height: "16px", marginRight: "4px" }}
                     />
                   )}
-                  <p style={{ margin: 0 }}>{result.title}</p>
+                  <p className="text-sm m-0">{result.title}</p>
                 </div>
               </a>
             ))
@@ -480,3 +490,4 @@ export default function Results() {
     </div>
   );
 }
+
