@@ -1,9 +1,8 @@
-import '../styles/globals.css';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 
-const API_KEY = "YOUR_API_KEY"; // Replace with your actual API key
-const SEARCH_ENGINE_ID = "YOUR_SEARCH_ENGINE_ID"; // Replace with your search engine ID
+const API_KEY = "AIzaSyDlc54LBF2pEDWQiC7JUG7kB5PaFsoytAE";
+const SEARCH_ENGINE_ID = "615b8aae2d40343b8";
 
 export default function Results() {
   const router = useRouter();
@@ -50,13 +49,13 @@ export default function Results() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white p-6 relative">
-      
       {/* Settings Icon & Dropdown */}
       <div className="absolute top-4 right-4 z-50">
         <button 
           onClick={() => setPanelOpen(!panelOpen)}
           className="p-2 bg-white text-black rounded-full shadow-lg border border-gray-300"
         >
+          {/* Inline SVG for the settings (gear) icon */}
           <svg 
             xmlns="http://www.w3.org/2000/svg" 
             fill="none" 
