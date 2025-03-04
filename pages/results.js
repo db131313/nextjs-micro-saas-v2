@@ -1,7 +1,7 @@
 import '../styles/globals.css';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { FaCog } from 'react-icons/fa6'; // ✅ FIXED IMPORT
+import { FaCog } from 'react-icons/fa'; // ✅ FIXED IMPORT
 
 const API_KEY = "AIzaSyDlc54LBF2pEDWQiC7JUG7kB5PaFsoytAE";
 const SEARCH_ENGINE_ID = "615b8aae2d40343b8";
@@ -146,6 +146,7 @@ export default function Results() {
     </div>
   );
 }
+
 
 
 
