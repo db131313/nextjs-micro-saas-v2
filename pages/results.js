@@ -1,7 +1,6 @@
 import '../styles/globals.css';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { FaCog } from 'react-icons/fa';
 
 const API_KEY = "AIzaSyDlc54LBF2pEDWQiC7JUG7kB5PaFsoytAE";
 const SEARCH_ENGINE_ID = "615b8aae2d40343b8";
@@ -46,9 +45,11 @@ export default function Results() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white p-6">
+      
       {/* Styling Controls Panel - Always Visible */}
-      <div className="absolute top-4 right-4 bg-white text-black p-4 rounded-lg shadow-md w-64 z-50">
+      <div className="fixed top-4 right-4 bg-white text-black p-4 rounded-lg shadow-lg w-72 z-50 border border-gray-300">
         <h3 className="text-lg font-bold mb-2">Customize View</h3>
+        
         <label className="block mb-2 text-sm">Grid Columns:</label>
         <select
           value={gridCols}
@@ -133,5 +134,4 @@ export default function Results() {
     </div>
   );
 }
-
 
