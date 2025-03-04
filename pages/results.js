@@ -1,7 +1,7 @@
 import '../styles/globals.css';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
-import { FaCog } from 'react-icons/fa'; // ✅ FIXED IMPORT
+import { FaCog } from 'react-icons/fa'; // ✅ Fixed Import
 
 const API_KEY = "AIzaSyDlc54LBF2pEDWQiC7JUG7kB5PaFsoytAE";
 const SEARCH_ENGINE_ID = "615b8aae2d40343b8";
@@ -16,12 +16,23 @@ export default function Results() {
   const [borderRadius, setBorderRadius] = useState("rounded-lg");
   const [gap, setGap] = useState("gap-6");
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const settingsRef = useRef(null);
 
   useEffect(() => {
     if (query) {
       fetchGoogleImages(query);
     }
   }, [query]);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (settingsRef.current && !settingsRef.current.contains(event.target)) {
+        setSettingsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const fetchGoogleImages = async (keyword) => {
     setLoading(true);
@@ -51,7 +62,7 @@ export default function Results() {
       <div className="absolute top-4 right-4">
         <button
           onClick={() => setSettingsOpen(!settingsOpen)}
-          className="text-white text-2xl p-2 bg-gray-800 rounded-full shadow hover:bg-gray-700"
+          className="text-white text-2xl p-3 bg-gray-800 rounded-full shadow-lg hover:bg-gray-700 focus:outline-none"
         >
           <FaCog />
         </button>
@@ -59,7 +70,10 @@ export default function Results() {
 
       {/* Settings Dropdown */}
       {settingsOpen && (
-        <div className="absolute top-14 right-4 bg-white text-black p-4 rounded-lg shadow-md w-64 z-10">
+        <div
+          ref={settingsRef}
+          className="absolute top-14 right-4 bg-white text-black p-4 rounded-lg shadow-md w-64 z-50"
+        >
           <h3 className="text-lg font-bold mb-2">Customize View</h3>
           <label className="block mb-2 text-sm">Grid Columns:</label>
           <select
@@ -110,7 +124,9 @@ export default function Results() {
           }
         }}
       />
-      <p className="mb-6">Results for: <strong>{query || "No keyword provided"}</strong></p>
+      <p className="mb-6">
+        Results for: <strong>{query || "No keyword provided"}</strong>
+      </p>
 
       {loading && <p className="text-gray-400">Loading results...</p>}
       {error && <p className="text-red-500">{error}</p>}
@@ -146,7 +162,6 @@ export default function Results() {
     </div>
   );
 }
-
 
 
 
