@@ -15,28 +15,27 @@ export default function Results() {
   const [error, setError] = useState(null);
 
   // ----- Grid & Link Card Controls -----
-  // Default grid layout is "masonry-vertical"
-  const [gridLayout, setGridLayout] = useState("masonry-vertical"); // Options: "simple-grid", "masonry-vertical", "masonry-horizontal"
-  const [linkCardHeight, setLinkCardHeight] = useState(250); // px
-  const [linkCardWidth, setLinkCardWidth] = useState(250); // px (used for simple grid/horizontal layout)
-  const [gridGap, setGridGap] = useState(10); // px
-  const [cardBorderRadius, setCardBorderRadius] = useState(8); // px
-  const [cardBorderWidth, setCardBorderWidth] = useState(1); // px
+  const [gridLayout, setGridLayout] = useState("masonry-vertical"); // default: "masonry-vertical"
+  const [linkCardHeight, setLinkCardHeight] = useState(250);
+  const [linkCardWidth, setLinkCardWidth] = useState(250);
+  const [gridGap, setGridGap] = useState(10);
+  const [cardBorderRadius, setCardBorderRadius] = useState(8);
+  const [cardBorderWidth, setCardBorderWidth] = useState(1);
   const [cardBorderColor, setCardBorderColor] = useState("#d1d5db");
 
   // ----- Link Text & Content Styling Controls -----
   const [linkFontFamily, setLinkFontFamily] = useState("Arial, sans-serif");
   const [linkFontWeight, setLinkFontWeight] = useState("400");
   const [linkFontColor, setLinkFontColor] = useState("#ffffff");
-  const [linkTextPosition, setLinkTextPosition] = useState("bottom"); // Options: "top", "middle", "bottom"
+  const [linkTextPosition, setLinkTextPosition] = useState("bottom");
   const [linkBackgroundColor, setLinkBackgroundColor] = useState("rgba(0,0,0,0.4)");
-  const [linkPadding, setLinkPadding] = useState(10); // px
+  const [linkPadding, setLinkPadding] = useState(10);
 
   // ----- Full Page Background Controls -----
   const [bgColor, setBgColor] = useState("#111111");
-  const [bgGradient, setBgGradient] = useState(""); // e.g. "linear-gradient(45deg, #ff6b6b, #f06595)"
-  const [bgImage, setBgImage] = useState(null); // URL of uploaded background image
-  const [bgVideo, setBgVideo] = useState(""); // YouTube embed URL
+  const [bgGradient, setBgGradient] = useState("");
+  const [bgImage, setBgImage] = useState(null);
+  const [bgVideo, setBgVideo] = useState("");
 
   // Control panel toggle
   const [panelOpen, setPanelOpen] = useState(false);
@@ -82,12 +81,16 @@ export default function Results() {
     }
   };
 
-  // ----- Dynamic Styles ----- 
+  // ----- Dynamic Styles -----
 
   // Full-page background style
   const backgroundStyle = {
     backgroundColor: bgColor,
-    backgroundImage: bgGradient ? bgGradient : bgImage ? `url(${bgImage})` : "none",
+    backgroundImage: bgGradient
+      ? bgGradient
+      : bgImage
+      ? `url(${bgImage})`
+      : "none",
     backgroundSize: bgImage ? "cover" : "auto",
     backgroundRepeat: "no-repeat",
     backgroundPosition: "center",
@@ -99,7 +102,8 @@ export default function Results() {
     gridContainerStyle.display = "grid";
     gridContainerStyle.gridTemplateColumns = `repeat(auto-fill, minmax(${linkCardWidth}px, 1fr))`;
   } else if (gridLayout === "masonry-vertical") {
-    gridContainerStyle.columnCount = 3; // Fixed column count for vertical masonry
+    // CSS columns for vertical masonry
+    gridContainerStyle.columnCount = 3; // adjust as needed
     gridContainerStyle.columnGap = `${gridGap}px`;
   } else if (gridLayout === "masonry-horizontal") {
     gridContainerStyle.display = "flex";
@@ -108,18 +112,21 @@ export default function Results() {
     gridContainerStyle.gap = `${gridGap}px`;
   }
 
-  // Link card style
-  const cardStyle = {
+  // Each link card container style
+  // Note the marginBottom to help spacing in column-based layouts
+  // We'll set breakInside inline on each card to ensure they don’t break
+  const cardStyleBase = {
+    position: "relative",
+    overflow: "hidden",
+    borderRadius: `${cardBorderRadius}px`,
+    border: `${cardBorderWidth}px solid ${cardBorderColor}`,
+    marginBottom: gridLayout === "masonry-vertical" ? `${gridGap}px` : undefined,
+    // If simple-grid or horizontal, use specified width; otherwise full width for column
     width:
       gridLayout === "simple-grid" || gridLayout === "masonry-horizontal"
         ? `${linkCardWidth}px`
         : "100%",
     height: `${linkCardHeight}px`,
-    borderRadius: `${cardBorderRadius}px`,
-    border: `${cardBorderWidth}px solid ${cardBorderColor}`,
-    position: "relative",
-    overflow: "hidden",
-    marginBottom: gridLayout === "masonry-vertical" ? `${gridGap}px` : undefined,
   };
 
   // Overlay style for link text
@@ -220,6 +227,7 @@ export default function Results() {
                   className="w-full mb-2"
                 />
 
+                {/* Only show width slider if not vertical masonry */}
                 {gridLayout !== "masonry-vertical" && (
                   <>
                     <label className="block text-sm mb-1">
@@ -230,13 +238,17 @@ export default function Results() {
                       min="100"
                       max="500"
                       value={linkCardWidth}
-                      onChange={(e) => setLinkCardWidth(Number(e.target.value))}
+                      onChange={(e) =>
+                        setLinkCardWidth(Number(e.target.value))
+                      }
                       className="w-full mb-2"
                     />
                   </>
                 )}
 
-                <label className="block text-sm mb-1">Grid Gap: {gridGap}px</label>
+                <label className="block text-sm mb-1">
+                  Grid Gap: {gridGap}px
+                </label>
                 <input
                   type="range"
                   min="0"
@@ -257,7 +269,9 @@ export default function Results() {
                   min="0"
                   max="50"
                   value={cardBorderRadius}
-                  onChange={(e) => setCardBorderRadius(Number(e.target.value))}
+                  onChange={(e) =>
+                    setCardBorderRadius(Number(e.target.value))
+                  }
                   className="w-full mb-2"
                 />
 
@@ -269,7 +283,9 @@ export default function Results() {
                   min="0"
                   max="10"
                   value={cardBorderWidth}
-                  onChange={(e) => setCardBorderWidth(Number(e.target.value))}
+                  onChange={(e) =>
+                    setCardBorderWidth(Number(e.target.value))
+                  }
                   className="w-full mb-2"
                 />
 
@@ -440,41 +456,56 @@ export default function Results() {
         {/* Results Grid Container (full-width) */}
         <div style={gridContainerStyle} className="w-full">
           {searchResults.length > 0 ? (
-            searchResults.map((result, index) => (
-              <a
-                key={index}
-                href={result.image.contextLink}
-                style={cardStyle}
-                className="break-inside-avoid relative"
-              >
-                {/* Full-background image */}
-                {result.link && (
-                  <img
-                    src={result.link}
-                    alt={result.title}
-                    style={{
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                    }}
-                  />
-                )}
-                {/* Overlay with favicon and truncated text */}
-                <div style={overlayStyle} className="relative z-10 flex items-center">
-                  {result.image && result.image.contextLink && (
+            searchResults.map((result, index) => {
+              // For each card, we merge base style with breakInside to ensure masonry works
+              const cardStyle = {
+                ...cardStyleBase,
+                // Ensure columns don't break the card
+                breakInside: "avoid",
+                WebkitColumnBreakInside: "avoid",
+                MozColumnBreakInside: "avoid",
+              };
+
+              return (
+                <a
+                  key={index}
+                  href={result.image.contextLink}
+                  style={cardStyle}
+                  className="relative"
+                >
+                  {/* Full-background image */}
+                  {result.link && (
                     <img
-                      src={getFaviconUrl(result.image.contextLink)}
-                      alt="favicon"
-                      style={{ width: "16px", height: "16px", marginRight: "4px" }}
+                      src={result.link}
+                      alt={result.title}
+                      style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                      }}
                     />
                   )}
-                  <p className="text-sm m-0">{result.title}</p>
-                </div>
-              </a>
-            ))
+                  {/* Overlay with favicon and truncated text */}
+                  <div style={overlayStyle} className="relative z-10 flex items-center">
+                    {result.image && result.image.contextLink && (
+                      <img
+                        src={getFaviconUrl(result.image.contextLink)}
+                        alt="favicon"
+                        style={{
+                          width: "16px",
+                          height: "16px",
+                          marginRight: "4px",
+                        }}
+                      />
+                    )}
+                    <p className="text-sm m-0">{result.title}</p>
+                  </div>
+                </a>
+              );
+            })
           ) : (
             !loading && <p>No results found.</p>
           )}
