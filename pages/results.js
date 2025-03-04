@@ -50,100 +50,104 @@ export default function Results() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white p-6 relative">
-      
-      {/* Settings Icon and Dropdown using inline styles */}
-      <div style={{ position: "absolute", top: "1rem", right: "1rem", zIndex: 50 }}>
+      {/* Settings Icon & Dropdown - using inline styles and an inline SVG */}
+      <div style={{ position: "absolute", top: "1rem", right: "1rem", zIndex: 1000 }}>
         <button 
           onClick={() => setPanelOpen(!panelOpen)}
           style={{
-            padding: "0.5rem",
-            backgroundColor: "white",
-            color: "black",
-            borderRadius: "50%",
-            boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)",
+            background: "#fff",
             border: "1px solid #d1d5db",
+            borderRadius: "50%",
+            padding: "0.5rem",
+            boxShadow: "0 4px 6px rgba(0,0,0,0.1)"
           }}
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth="1.5"
-            stroke="currentColor"
-            style={{ width: "1.5rem", height: "1.5rem" }}
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            width="24" 
+            height="24" 
+            fill="none" 
+            stroke="currentColor" 
+            strokeWidth="2" 
+            strokeLinecap="round" 
+            strokeLinejoin="round"
+            style={{ display: "block" }}
           >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894a1.125 1.125 0 00.986.95l.963.07c.554.04.92.54.68 1.04l-.383.766a1.125 1.125 0 000 1.06l.383.767c.24.5-.126 1-.68 1.04l-.963.07a1.125 1.125 0 00-.986.95l-.15.893c-.09.543-.56.94-1.11.94h-1.094a1.125 1.125 0 01-1.11-.94l-.15-.893a1.125 1.125 0 00-.986-.95l-.963-.07c-.554-.04-.92-.54-.68-1.04l.383-.767a1.125 1.125 0 000-1.06l-.383-.766c-.24-.5.126-1 .68-1.04l.963-.07a1.125 1.125 0 00.986-.95l.15-.893z" />
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l0 0a1.65 1.65 0 0 1-2.33 2.33l0 0a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 1-2.11 0 1.65 1.65 0 0 0-1.82.33l0 0a1.65 1.65 0 0 1-2.33-2.33l0 0a1.65 1.65 0 0 0-.33-1.82 1.65 1.65 0 0 1 0-2.11 1.65 1.65 0 0 0 .33-1.82l0 0a1.65 1.65 0 0 1 2.33-2.33l0 0a1.65 1.65 0 0 0 1.82.33 1.65 1.65 0 0 1 2.11 0 1.65 1.65 0 0 0 1.82-.33l0 0a1.65 1.65 0 0 1 2.33 2.33l0 0a1.65 1.65 0 0 0 .33 1.82 1.65 1.65 0 0 1 0 2.11z"></path>
           </svg>
         </button>
         {panelOpen && (
           <div style={{
             marginTop: "0.5rem",
-            backgroundColor: "white",
-            color: "black",
+            background: "#fff",
+            color: "#000",
             padding: "1rem",
             borderRadius: "0.5rem",
-            boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)",
             width: "18rem",
             border: "1px solid #d1d5db",
+            boxShadow: "0 4px 6px rgba(0,0,0,0.1)"
           }}>
             <h3 style={{ fontSize: "1.125rem", fontWeight: "bold", marginBottom: "0.5rem" }}>Customize View</h3>
             
-            <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.875rem" }}>Grid Columns:</label>
-            <select
-              value={gridCols}
-              onChange={(e) => setGridCols(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "0.5rem",
-                marginBottom: "0.75rem",
-                border: "1px solid #ccc",
-                borderRadius: "0.25rem",
-                color: "black",
-              }}
-            >
-              <option value="grid-cols-1">1 Column</option>
-              <option value="grid-cols-2">2 Columns</option>
-              <option value="grid-cols-3">3 Columns</option>
-              <option value="grid-cols-4">4 Columns</option>
-            </select>
-
-            <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.875rem" }}>Border Radius:</label>
-            <select
-              value={borderRadius}
-              onChange={(e) => setBorderRadius(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "0.5rem",
-                marginBottom: "0.75rem",
-                border: "1px solid #ccc",
-                borderRadius: "0.25rem",
-                color: "black",
-              }}
-            >
-              <option value="rounded-none">No Rounding</option>
-              <option value="rounded-md">Small</option>
-              <option value="rounded-lg">Medium</option>
-              <option value="rounded-xl">Large</option>
-            </select>
-
-            <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.875rem" }}>Grid Gap:</label>
-            <select
-              value={gap}
-              onChange={(e) => setGap(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "0.5rem",
-                marginBottom: "0.75rem",
-                border: "1px solid #ccc",
-                borderRadius: "0.25rem",
-                color: "black",
-              }}
-            >
-              <option value="gap-2">Small Gap</option>
-              <option value="gap-4">Medium Gap</option>
-              <option value="gap-6">Large Gap</option>
-            </select>
+            <div style={{ marginBottom: "0.75rem" }}>
+              <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.875rem" }}>Grid Columns:</label>
+              <select
+                value={gridCols}
+                onChange={(e) => setGridCols(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "0.5rem",
+                  border: "1px solid #ccc",
+                  borderRadius: "0.25rem",
+                  color: "#000"
+                }}
+              >
+                <option value="grid-cols-1">1 Column</option>
+                <option value="grid-cols-2">2 Columns</option>
+                <option value="grid-cols-3">3 Columns</option>
+                <option value="grid-cols-4">4 Columns</option>
+              </select>
+            </div>
+            
+            <div style={{ marginBottom: "0.75rem" }}>
+              <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.875rem" }}>Border Radius:</label>
+              <select
+                value={borderRadius}
+                onChange={(e) => setBorderRadius(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "0.5rem",
+                  border: "1px solid #ccc",
+                  borderRadius: "0.25rem",
+                  color: "#000"
+                }}
+              >
+                <option value="rounded-none">No Rounding</option>
+                <option value="rounded-md">Small</option>
+                <option value="rounded-lg">Medium</option>
+                <option value="rounded-xl">Large</option>
+              </select>
+            </div>
+            
+            <div>
+              <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.875rem" }}>Grid Gap:</label>
+              <select
+                value={gap}
+                onChange={(e) => setGap(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "0.5rem",
+                  border: "1px solid #ccc",
+                  borderRadius: "0.25rem",
+                  color: "#000"
+                }}
+              >
+                <option value="gap-2">Small Gap</option>
+                <option value="gap-4">Medium Gap</option>
+                <option value="gap-6">Large Gap</option>
+              </select>
+            </div>
           </div>
         )}
       </div>
@@ -160,9 +164,7 @@ export default function Results() {
           }
         }}
       />
-      <p className="mb-6">
-        Results for: <strong>{query || "No keyword provided"}</strong>
-      </p>
+      <p className="mb-6">Results for: <strong>{query || "No keyword provided"}</strong></p>
 
       {loading && <p className="text-gray-400">Loading results...</p>}
       {error && <p className="text-red-500">{error}</p>}
@@ -198,4 +200,5 @@ export default function Results() {
     </div>
   );
 }
+
 
