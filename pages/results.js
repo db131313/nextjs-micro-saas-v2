@@ -1,5 +1,5 @@
 import '../styles/globals.css';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { FaCog } from 'react-icons/fa';
 
@@ -15,24 +15,12 @@ export default function Results() {
   const [gridCols, setGridCols] = useState("grid-cols-3");
   const [borderRadius, setBorderRadius] = useState("rounded-lg");
   const [gap, setGap] = useState("gap-6");
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const settingsRef = useRef(null);
 
   useEffect(() => {
     if (query) {
       fetchGoogleImages(query);
     }
   }, [query]);
-
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (settingsRef.current && !settingsRef.current.contains(event.target)) {
-        setSettingsOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   const fetchGoogleImages = async (keyword) => {
     setLoading(true);
@@ -57,57 +45,45 @@ export default function Results() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white p-6 relative">
-      {/* Settings Icon */}
-      <div className="absolute top-4 right-4">
-        <button
-          onClick={() => setSettingsOpen(!settingsOpen)}
-          className="text-white text-2xl p-2 bg-gray-800 rounded-full shadow hover:bg-gray-700 focus:outline-none"
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white p-6">
+      {/* Styling Controls Panel - Always Visible */}
+      <div className="absolute top-4 right-4 bg-white text-black p-4 rounded-lg shadow-md w-64 z-50">
+        <h3 className="text-lg font-bold mb-2">Customize View</h3>
+        <label className="block mb-2 text-sm">Grid Columns:</label>
+        <select
+          value={gridCols}
+          onChange={(e) => setGridCols(e.target.value)}
+          className="w-full p-2 mb-3 border rounded text-black"
         >
-          <FaCog />
-        </button>
+          <option value="grid-cols-1">1 Column</option>
+          <option value="grid-cols-2">2 Columns</option>
+          <option value="grid-cols-3">3 Columns</option>
+          <option value="grid-cols-4">4 Columns</option>
+        </select>
+
+        <label className="block mb-2 text-sm">Border Radius:</label>
+        <select
+          value={borderRadius}
+          onChange={(e) => setBorderRadius(e.target.value)}
+          className="w-full p-2 mb-3 border rounded text-black"
+        >
+          <option value="rounded-none">No Rounding</option>
+          <option value="rounded-md">Small</option>
+          <option value="rounded-lg">Medium</option>
+          <option value="rounded-xl">Large</option>
+        </select>
+
+        <label className="block mb-2 text-sm">Grid Gap:</label>
+        <select
+          value={gap}
+          onChange={(e) => setGap(e.target.value)}
+          className="w-full p-2 mb-3 border rounded text-black"
+        >
+          <option value="gap-2">Small Gap</option>
+          <option value="gap-4">Medium Gap</option>
+          <option value="gap-6">Large Gap</option>
+        </select>
       </div>
-
-      {/* Settings Dropdown */}
-      {settingsOpen && (
-        <div ref={settingsRef} className="absolute top-14 right-4 bg-white text-black p-4 rounded-lg shadow-md w-64 z-50">
-          <h3 className="text-lg font-bold mb-2">Customize View</h3>
-          <label className="block mb-2 text-sm">Grid Columns:</label>
-          <select
-            value={gridCols}
-            onChange={(e) => setGridCols(e.target.value)}
-            className="w-full p-2 mb-3 border rounded text-black"
-          >
-            <option value="grid-cols-1">1 Column</option>
-            <option value="grid-cols-2">2 Columns</option>
-            <option value="grid-cols-3">3 Columns</option>
-            <option value="grid-cols-4">4 Columns</option>
-          </select>
-
-          <label className="block mb-2 text-sm">Border Radius:</label>
-          <select
-            value={borderRadius}
-            onChange={(e) => setBorderRadius(e.target.value)}
-            className="w-full p-2 mb-3 border rounded text-black"
-          >
-            <option value="rounded-none">No Rounding</option>
-            <option value="rounded-md">Small</option>
-            <option value="rounded-lg">Medium</option>
-            <option value="rounded-xl">Large</option>
-          </select>
-
-          <label className="block mb-2 text-sm">Grid Gap:</label>
-          <select
-            value={gap}
-            onChange={(e) => setGap(e.target.value)}
-            className="w-full p-2 mb-3 border rounded text-black"
-          >
-            <option value="gap-2">Small Gap</option>
-            <option value="gap-4">Medium Gap</option>
-            <option value="gap-6">Large Gap</option>
-          </select>
-        </div>
-      )}
 
       {/* Search Input */}
       <h1 className="text-3xl font-bold mb-4">Search Results</h1>
@@ -157,6 +133,5 @@ export default function Results() {
     </div>
   );
 }
-
 
 
