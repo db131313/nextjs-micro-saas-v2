@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 
-// Use your provided API keys:
+// Your provided API keys
 const API_KEY = "AIzaSyDlc54LBF2pEDWQiC7JUG7kB5PaFsoytAE";
 const SEARCH_ENGINE_ID = "615b8aae2d40343b8";
 
@@ -15,24 +15,22 @@ export default function Results() {
   const [error, setError] = useState(null);
 
   // ----- Grid & Card Controls -----
-  // Default to "masonry-vertical" (we'll approximate it with a 3-column grid for drag-and-drop).
+  // Default to "masonry-vertical" for a staggered layout
   const [gridLayout, setGridLayout] = useState("masonry-vertical");
-  const [linkCardHeight, setLinkCardHeight] = useState(250);
-  const [linkCardWidth, setLinkCardWidth] = useState(250);
+  const [linkCardWidth, setLinkCardWidth] = useState(250);  // used for simple-grid/horizontal
   const [gridGap, setGridGap] = useState(10);
   const [cardBorderRadius, setCardBorderRadius] = useState(8);
   const [cardBorderWidth, setCardBorderWidth] = useState(1);
   const [cardBorderColor, setCardBorderColor] = useState("#d1d5db");
 
-  // ----- Link Text & Content Controls -----
+  // ----- Link Text & Content Styling Controls -----
   const [linkFontFamily, setLinkFontFamily] = useState("Arial, sans-serif");
   const [linkFontWeight, setLinkFontWeight] = useState("400");
   const [linkFontColor, setLinkFontColor] = useState("#ffffff");
+  const [linkFontSize, setLinkFontSize] = useState(14);
   const [linkTextPosition, setLinkTextPosition] = useState("bottom");
   const [linkBackgroundColor, setLinkBackgroundColor] = useState("rgba(0,0,0,0.4)");
   const [linkPadding, setLinkPadding] = useState(10);
-  // New: Font Size for link text
-  const [linkFontSize, setLinkFontSize] = useState(14);
 
   // ----- Full-Page Background Controls -----
   const [bgColor, setBgColor] = useState("#111111");
@@ -83,7 +81,7 @@ export default function Results() {
     setLoading(false);
   };
 
-  // Handle background image upload
+  // ----- Background Image Upload -----
   const handleBgImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -92,7 +90,43 @@ export default function Results() {
     }
   };
 
-  // Helper: reorder array items
+  // ----- YouTube Background Link Fix -----
+  // Extracts the video ID from a variety of YouTube link formats
+  function parseYouTubeUrl(url) {
+    if (!url) return null;
+
+    try {
+      // If user already provided an embed link:
+      if (url.includes("/embed/")) {
+        const embedId = url.split("/embed/")[1]?.split(/[?&]/)[0];
+        return embedId || null;
+      }
+      // If youtu.be short link:
+      if (url.includes("youtu.be/")) {
+        const shortId = url.split("youtu.be/")[1]?.split(/[?&]/)[0];
+        return shortId || null;
+      }
+      // If watch?v= link:
+      if (url.includes("watch?v=")) {
+        const queryString = url.split("watch?v=")[1];
+        const watchId = queryString.split(/[?&]/)[0];
+        return watchId || null;
+      }
+    } catch {
+      return null;
+    }
+    return null;
+  }
+
+  // Return a complete embed URL with loop=1, start=0, end=10
+  function getYouTubeEmbedUrl(rawUrl) {
+    const vid = parseYouTubeUrl(rawUrl);
+    if (!vid) return null;
+
+    return `https://www.youtube.com/embed/${vid}?autoplay=1&mute=1&loop=1&start=0&end=10&playlist=${vid}`;
+  }
+
+  // ----- Reorder Array Items -----
   const reorderList = (list, startIndex, endIndex) => {
     const result = [...list];
     const [removed] = result.splice(startIndex, 1);
@@ -115,7 +149,6 @@ export default function Results() {
       const newResults = reorderList(searchResults, draggedItemIndex, dragOverItemIndex);
       setSearchResults(newResults);
     }
-    // Cleanup
     setDraggedItemIndex(null);
     setDragOverItemIndex(null);
   };
@@ -125,7 +158,7 @@ export default function Results() {
     setDragOverItemIndex(null);
   };
 
-  // ----- Link Card Actions -----
+  // ----- Card Actions -----
   const openEditModal = (index) => {
     setModalIndex(index);
     setIsModalOpen(true);
@@ -145,6 +178,7 @@ export default function Results() {
   // ----- Dynamic Styles -----
 
   // Full-page background style
+  const embedUrl = getYouTubeEmbedUrl(bgVideo);
   const backgroundStyle = {
     backgroundColor: bgColor,
     backgroundImage: bgGradient
@@ -157,42 +191,56 @@ export default function Results() {
     backgroundPosition: "center",
   };
 
-  // Grid container style (approx. “masonry vertical” with a 3-column grid)
-  let gridContainerStyle = {
-    display: "grid",
-    gridTemplateColumns: "repeat(3, 1fr)",
-    gridGap: `${gridGap}px`,
-  };
-
-  // If user chooses a different layout:
-  if (gridLayout === "simple-grid") {
-    gridContainerStyle = {
+  // For a "masonry-vertical" layout with original image aspect ratio,
+  // we use CSS columns. That ensures images are staggered properly.
+  let containerStyle = {};
+  if (gridLayout === "masonry-vertical") {
+    containerStyle = {
+      columnCount: 3, // Adjust for however many columns you want
+      columnGap: `${gridGap}px`,
+      width: "100%",
+    };
+  } else if (gridLayout === "simple-grid") {
+    containerStyle = {
       display: "grid",
       gridTemplateColumns: `repeat(auto-fill, minmax(${linkCardWidth}px, 1fr))`,
       gap: `${gridGap}px`,
+      width: "100%",
     };
   } else if (gridLayout === "masonry-horizontal") {
-    gridContainerStyle = {
+    containerStyle = {
       display: "flex",
       flexWrap: "nowrap",
       overflowX: "auto",
       gap: `${gridGap}px`,
+      width: "100%",
     };
   }
 
-  // Card container base style
+  // Each card style. For "masonry-vertical," we remove forced height so images can define it.
   const cardStyleBase = {
     position: "relative",
     overflow: "hidden",
     borderRadius: `${cardBorderRadius}px`,
     border: `${cardBorderWidth}px solid ${cardBorderColor}`,
-    width: gridLayout === "masonry-horizontal" || gridLayout === "simple-grid"
-      ? `${linkCardWidth}px`
-      : "100%",
-    height: `${linkCardHeight}px`,
+    marginBottom: gridLayout === "masonry-vertical" ? `${gridGap}px` : undefined,
+
+    // Force a specific width only if simple-grid or horizontal
+    width:
+      gridLayout === "simple-grid" || gridLayout === "masonry-horizontal"
+        ? `${linkCardWidth}px`
+        : "100%",
+
+    // No fixed height for vertical masonry—images keep original aspect ratio
+    // For drag-and-drop in CSS columns, also ensure:
+    breakInside: "avoid",
+    WebkitColumnBreakInside: "avoid",
+    MozColumnBreakInside: "avoid",
+
+    cursor: "move",
   };
 
-  // Overlay style for link text & icons
+  // Overlay for text & icons
   const overlayStyle = {
     position: "absolute",
     left: 0,
@@ -211,7 +259,7 @@ export default function Results() {
         : linkTextPosition === "middle"
         ? "center"
         : "flex-end",
-    justifyContent: "space-between", // so text is left, icons can be right
+    justifyContent: "space-between",
     zIndex: 10,
   };
 
@@ -228,13 +276,13 @@ export default function Results() {
   return (
     <div style={backgroundStyle} className="min-h-screen relative">
       {/* Optional Background Video */}
-      {bgVideo && (
+      {embedUrl && (
         <div className="absolute inset-0 z-[-1]">
           <iframe
             ref={videoRef}
             width="100%"
             height="100%"
-            src={`${bgVideo}?autoplay=1&mute=1&loop=1&start=0&end=10&playlist=${bgVideo}`}
+            src={embedUrl}
             frameBorder="0"
             allow="autoplay; encrypted-media"
             allowFullScreen
@@ -275,24 +323,12 @@ export default function Results() {
                   onChange={(e) => setGridLayout(e.target.value)}
                   className="w-full p-2 border rounded text-black mb-2"
                 >
-                  <option value="simple-grid">Simple Grid</option>
                   <option value="masonry-vertical">Masonry Vertical</option>
+                  <option value="simple-grid">Simple Grid</option>
                   <option value="masonry-horizontal">Masonry Horizontal</option>
                 </select>
 
-                <label className="block text-sm mb-1">
-                  Link Card Height: {linkCardHeight}px
-                </label>
-                <input
-                  type="range"
-                  min="100"
-                  max="500"
-                  value={linkCardHeight}
-                  onChange={(e) => setLinkCardHeight(Number(e.target.value))}
-                  className="w-full mb-2"
-                />
-
-                {/* Only show width slider if not vertical masonry */}
+                {/* Only relevant for simple-grid or horizontal */}
                 {gridLayout !== "masonry-vertical" && (
                   <>
                     <label className="block text-sm mb-1">
@@ -403,7 +439,9 @@ export default function Results() {
                   className="w-full mb-2 h-8 p-0"
                 />
 
-                <label className="block text-sm mb-1">Font Size: {linkFontSize}px</label>
+                <label className="block text-sm mb-1">
+                  Font Size: {linkFontSize}px
+                </label>
                 <input
                   type="range"
                   min="10"
@@ -493,11 +531,11 @@ export default function Results() {
                 />
 
                 <label className="block text-sm mb-1">
-                  Background Video (YouTube URL):
+                  Background Video (YouTube link):
                 </label>
                 <input
                   type="text"
-                  placeholder="https://www.youtube.com/embed/VIDEO_ID"
+                  placeholder="e.g. https://youtu.be/VIDEO_ID"
                   value={bgVideo}
                   onChange={(e) => setBgVideo(e.target.value)}
                   className="w-full p-2 border rounded text-black mb-2"
@@ -526,44 +564,39 @@ export default function Results() {
         {loading && <p className="text-gray-400">Loading results...</p>}
         {error && <p className="text-red-500">{error}</p>}
 
-        {/* Results Grid Container (approx. “masonry vertical” with 3 columns) */}
-        <div style={gridContainerStyle} className="w-full">
+        {/* Masonry / Grid Container */}
+        <div style={containerStyle} className="w-full">
           {searchResults.length > 0 ? (
             searchResults.map((result, index) => {
               const cardStyle = {
                 ...cardStyleBase,
-                // Drag & drop
-                cursor: "move",
               };
 
               return (
                 <div
                   key={index}
                   style={cardStyle}
-                  className="relative"
+                  className="mb-4 break-inside-avoid relative"
                   draggable
                   onDragStart={() => handleDragStart(index)}
                   onDragOver={(e) => handleDragOver(index, e)}
                   onDrop={() => handleDrop(index)}
                   onDragEnd={handleDragEnd}
                 >
-                  {/* Full-background image */}
+                  {/* Full-background image that keeps aspect ratio */}
                   {result.link && (
                     <img
                       src={result.link}
                       alt={result.title}
                       style={{
-                        position: "absolute",
-                        top: 0,
-                        left: 0,
+                        display: "block",
                         width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
+                        height: "auto",
                       }}
                     />
                   )}
 
-                  {/* Overlay with text and icons */}
+                  {/* Overlay with text and icons (positioned at bottom) */}
                   <div style={overlayStyle}>
                     {/* Left side: Favicon + Title */}
                     <div className="flex items-center">
@@ -581,7 +614,7 @@ export default function Results() {
                       <p className="text-sm m-0 line-clamp-2">{result.title}</p>
                     </div>
 
-                    {/* Right side: Action Icons (Edit, Delete, Move) */}
+                    {/* Right side: Action Icons */}
                     <div className="flex items-center space-x-2">
                       {/* Edit Icon */}
                       <button
@@ -599,7 +632,9 @@ export default function Results() {
                           <path
                             strokeLinecap="round"
                             strokeLinejoin="round"
-                            d="M16.862 2.487a2.25 2.25 0 113.182 3.182L7.136 18.578a4.5 4.5 0 01-1.892 1.131l-2.835.945.945-2.835a4.5 4.5 0 011.131-1.892l12.377-12.44z"
+                            d="M16.862 2.487a2.25 2.25 0 113.182 3.182L7.136 
+                              18.578a4.5 4.5 0 01-1.892 1.131l-2.835.945.945-2.835a4.5 
+                              4.5 0 011.131-1.892l12.377-12.44z"
                           />
                         </svg>
                       </button>
@@ -620,17 +655,18 @@ export default function Results() {
                           <path
                             strokeLinecap="round"
                             strokeLinejoin="round"
-                            d="M9.75 9.75l.45 8.25m4.5-8.25l-.45 8.25M6.75 5.25h10.5m-9 
+                            d="M9.75 9.75l.45 8.25m4.5-8.25l-.45 
+                              8.25M6.75 5.25h10.5m-9 
                               0v-.75a2.25 2.25 0 012.25-2.25h3a2.25 2.25 0 
-                              012.25 2.25v.75m-9 0h9m-9 0h-1.5m10.5 0h1.5M4.5 
-                              5.25h15m-2.25 0v13.5a2.25 2.25 0 
-                              01-2.25 2.25h-6a2.25 2.25 0 
-                              01-2.25-2.25V5.25"
+                              012.25 2.25v.75m-9 0h9m-9 0h-1.5m10.5 
+                              0h1.5M4.5 5.25h15m-2.25 0v13.5a2.25 
+                              2.25 0 01-2.25 2.25h-6a2.25 2.25 
+                              0 01-2.25-2.25V5.25"
                           />
                         </svg>
                       </button>
 
-                      {/* Move Icon (purely cosmetic, actual dragging is on the card) */}
+                      {/* Move Icon (the entire card is draggable) */}
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
@@ -642,13 +678,13 @@ export default function Results() {
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
-                          d="M9 4.5V3.75a.75.75 0 
-                             111.5 0v.75h3V3.75a.75.75 0 
-                             111.5 0v.75h1.75a2.25 2.25 0 
-                             012.25 2.25v12a2.25 2.25 0 
-                             01-2.25 2.25H7.25a2.25 2.25 0 
-                             01-2.25-2.25v-12a2.25 2.25 0 
-                             012.25-2.25H9z"
+                          d="M9 4.5V3.75a.75.75 
+                             0 111.5 0v.75h3V3.75a.75.75 0 
+                             111.5 0v.75h1.75a2.25 2.25 
+                             0 012.25 2.25v12a2.25 2.25 
+                             0 01-2.25 2.25H7.25a2.25 2.25 
+                             0 01-2.25-2.25v-12a2.25 2.25 
+                             0 012.25-2.25H9z"
                         />
                         <path
                           strokeLinecap="round"
@@ -696,4 +732,3 @@ export default function Results() {
     </div>
   );
 }
-
