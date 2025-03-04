@@ -9,13 +9,14 @@ export default function Results() {
   const router = useRouter();
   const { query } = router.query;
 
-  // Search result state
+  // ----- Search State -----
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // ----- Grid & Link Card Controls -----
-  const [gridLayout, setGridLayout] = useState("masonry-vertical"); // default: "masonry-vertical"
+  // ----- Grid & Card Controls -----
+  // Default to "masonry-vertical" (we'll approximate it with a 3-column grid for drag-and-drop).
+  const [gridLayout, setGridLayout] = useState("masonry-vertical");
   const [linkCardHeight, setLinkCardHeight] = useState(250);
   const [linkCardWidth, setLinkCardWidth] = useState(250);
   const [gridGap, setGridGap] = useState(10);
@@ -23,27 +24,37 @@ export default function Results() {
   const [cardBorderWidth, setCardBorderWidth] = useState(1);
   const [cardBorderColor, setCardBorderColor] = useState("#d1d5db");
 
-  // ----- Link Text & Content Styling Controls -----
+  // ----- Link Text & Content Controls -----
   const [linkFontFamily, setLinkFontFamily] = useState("Arial, sans-serif");
   const [linkFontWeight, setLinkFontWeight] = useState("400");
   const [linkFontColor, setLinkFontColor] = useState("#ffffff");
   const [linkTextPosition, setLinkTextPosition] = useState("bottom");
   const [linkBackgroundColor, setLinkBackgroundColor] = useState("rgba(0,0,0,0.4)");
   const [linkPadding, setLinkPadding] = useState(10);
+  // New: Font Size for link text
+  const [linkFontSize, setLinkFontSize] = useState(14);
 
-  // ----- Full Page Background Controls -----
+  // ----- Full-Page Background Controls -----
   const [bgColor, setBgColor] = useState("#111111");
   const [bgGradient, setBgGradient] = useState("");
   const [bgImage, setBgImage] = useState(null);
   const [bgVideo, setBgVideo] = useState("");
 
-  // Control panel toggle
+  // ----- Control Panel Toggle -----
   const [panelOpen, setPanelOpen] = useState(false);
 
-  // Ref for background video iframe
+  // ----- Edit Modal State (Stub) -----
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalIndex, setModalIndex] = useState(null);
+
+  // ----- Drag-and-Drop State -----
+  const [draggedItemIndex, setDraggedItemIndex] = useState(null);
+  const [dragOverItemIndex, setDragOverItemIndex] = useState(null);
+
+  // Background video ref
   const videoRef = useRef(null);
 
-  // Fetch search results (images) when query changes
+  // Fetch images from Google when `query` changes
   useEffect(() => {
     if (query) {
       fetchGoogleImages(query);
@@ -81,6 +92,56 @@ export default function Results() {
     }
   };
 
+  // Helper: reorder array items
+  const reorderList = (list, startIndex, endIndex) => {
+    const result = [...list];
+    const [removed] = result.splice(startIndex, 1);
+    result.splice(endIndex, 0, removed);
+    return result;
+  };
+
+  // ----- Drag-and-Drop Handlers -----
+  const handleDragStart = (index) => {
+    setDraggedItemIndex(index);
+  };
+
+  const handleDragOver = (index, e) => {
+    e.preventDefault(); // allow drop
+    setDragOverItemIndex(index);
+  };
+
+  const handleDrop = (index) => {
+    if (draggedItemIndex !== null && dragOverItemIndex !== null) {
+      const newResults = reorderList(searchResults, draggedItemIndex, dragOverItemIndex);
+      setSearchResults(newResults);
+    }
+    // Cleanup
+    setDraggedItemIndex(null);
+    setDragOverItemIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedItemIndex(null);
+    setDragOverItemIndex(null);
+  };
+
+  // ----- Link Card Actions -----
+  const openEditModal = (index) => {
+    setModalIndex(index);
+    setIsModalOpen(true);
+  };
+
+  const closeEditModal = () => {
+    setIsModalOpen(false);
+    setModalIndex(null);
+  };
+
+  const deleteCard = (index) => {
+    const updated = [...searchResults];
+    updated.splice(index, 1);
+    setSearchResults(updated);
+  };
+
   // ----- Dynamic Styles -----
 
   // Full-page background style
@@ -96,40 +157,42 @@ export default function Results() {
     backgroundPosition: "center",
   };
 
-  // Grid container style based on chosen layout
-  let gridContainerStyle = { gap: `${gridGap}px` };
+  // Grid container style (approx. “masonry vertical” with a 3-column grid)
+  let gridContainerStyle = {
+    display: "grid",
+    gridTemplateColumns: "repeat(3, 1fr)",
+    gridGap: `${gridGap}px`,
+  };
+
+  // If user chooses a different layout:
   if (gridLayout === "simple-grid") {
-    gridContainerStyle.display = "grid";
-    gridContainerStyle.gridTemplateColumns = `repeat(auto-fill, minmax(${linkCardWidth}px, 1fr))`;
-  } else if (gridLayout === "masonry-vertical") {
-    // CSS columns for vertical masonry
-    gridContainerStyle.columnCount = 3; // adjust as needed
-    gridContainerStyle.columnGap = `${gridGap}px`;
+    gridContainerStyle = {
+      display: "grid",
+      gridTemplateColumns: `repeat(auto-fill, minmax(${linkCardWidth}px, 1fr))`,
+      gap: `${gridGap}px`,
+    };
   } else if (gridLayout === "masonry-horizontal") {
-    gridContainerStyle.display = "flex";
-    gridContainerStyle.flexWrap = "nowrap";
-    gridContainerStyle.overflowX = "auto";
-    gridContainerStyle.gap = `${gridGap}px`;
+    gridContainerStyle = {
+      display: "flex",
+      flexWrap: "nowrap",
+      overflowX: "auto",
+      gap: `${gridGap}px`,
+    };
   }
 
-  // Each link card container style
-  // Note the marginBottom to help spacing in column-based layouts
-  // We'll set breakInside inline on each card to ensure they don’t break
+  // Card container base style
   const cardStyleBase = {
     position: "relative",
     overflow: "hidden",
     borderRadius: `${cardBorderRadius}px`,
     border: `${cardBorderWidth}px solid ${cardBorderColor}`,
-    marginBottom: gridLayout === "masonry-vertical" ? `${gridGap}px` : undefined,
-    // If simple-grid or horizontal, use specified width; otherwise full width for column
-    width:
-      gridLayout === "simple-grid" || gridLayout === "masonry-horizontal"
-        ? `${linkCardWidth}px`
-        : "100%",
+    width: gridLayout === "masonry-horizontal" || gridLayout === "simple-grid"
+      ? `${linkCardWidth}px`
+      : "100%",
     height: `${linkCardHeight}px`,
   };
 
-  // Overlay style for link text
+  // Overlay style for link text & icons
   const overlayStyle = {
     position: "absolute",
     left: 0,
@@ -140,6 +203,7 @@ export default function Results() {
     fontFamily: linkFontFamily,
     fontWeight: linkFontWeight,
     color: linkFontColor,
+    fontSize: `${linkFontSize}px`,
     display: "flex",
     alignItems:
       linkTextPosition === "top"
@@ -147,10 +211,11 @@ export default function Results() {
         : linkTextPosition === "middle"
         ? "center"
         : "flex-end",
+    justifyContent: "space-between", // so text is left, icons can be right
     zIndex: 10,
   };
 
-  // Helper: get favicon URL using Google's favicon service
+  // Helper: get favicon from Google
   const getFaviconUrl = (url) => {
     try {
       const { hostname } = new URL(url);
@@ -179,7 +244,7 @@ export default function Results() {
       )}
 
       <div className="relative z-10 flex flex-col items-center text-white p-6">
-        {/* Styling Controls Panel Toggle */}
+        {/* Control Panel Toggle */}
         <div className="absolute top-4 right-4 z-50">
           <button
             onClick={() => setPanelOpen(!panelOpen)}
@@ -238,9 +303,7 @@ export default function Results() {
                       min="100"
                       max="500"
                       value={linkCardWidth}
-                      onChange={(e) =>
-                        setLinkCardWidth(Number(e.target.value))
-                      }
+                      onChange={(e) => setLinkCardWidth(Number(e.target.value))}
                       className="w-full mb-2"
                     />
                   </>
@@ -338,6 +401,16 @@ export default function Results() {
                   value={linkFontColor}
                   onChange={(e) => setLinkFontColor(e.target.value)}
                   className="w-full mb-2 h-8 p-0"
+                />
+
+                <label className="block text-sm mb-1">Font Size: {linkFontSize}px</label>
+                <input
+                  type="range"
+                  min="10"
+                  max="36"
+                  value={linkFontSize}
+                  onChange={(e) => setLinkFontSize(Number(e.target.value))}
+                  className="w-full mb-2"
                 />
 
                 <label className="block text-sm mb-1">Text Position:</label>
@@ -453,25 +526,26 @@ export default function Results() {
         {loading && <p className="text-gray-400">Loading results...</p>}
         {error && <p className="text-red-500">{error}</p>}
 
-        {/* Results Grid Container (full-width) */}
+        {/* Results Grid Container (approx. “masonry vertical” with 3 columns) */}
         <div style={gridContainerStyle} className="w-full">
           {searchResults.length > 0 ? (
             searchResults.map((result, index) => {
-              // For each card, we merge base style with breakInside to ensure masonry works
               const cardStyle = {
                 ...cardStyleBase,
-                // Ensure columns don't break the card
-                breakInside: "avoid",
-                WebkitColumnBreakInside: "avoid",
-                MozColumnBreakInside: "avoid",
+                // Drag & drop
+                cursor: "move",
               };
 
               return (
-                <a
+                <div
                   key={index}
-                  href={result.image.contextLink}
                   style={cardStyle}
                   className="relative"
+                  draggable
+                  onDragStart={() => handleDragStart(index)}
+                  onDragOver={(e) => handleDragOver(index, e)}
+                  onDrop={() => handleDrop(index)}
+                  onDragEnd={handleDragEnd}
                 >
                   {/* Full-background image */}
                   {result.link && (
@@ -488,22 +562,103 @@ export default function Results() {
                       }}
                     />
                   )}
-                  {/* Overlay with favicon and truncated text */}
-                  <div style={overlayStyle} className="relative z-10 flex items-center">
-                    {result.image && result.image.contextLink && (
-                      <img
-                        src={getFaviconUrl(result.image.contextLink)}
-                        alt="favicon"
-                        style={{
-                          width: "16px",
-                          height: "16px",
-                          marginRight: "4px",
-                        }}
-                      />
-                    )}
-                    <p className="text-sm m-0">{result.title}</p>
+
+                  {/* Overlay with text and icons */}
+                  <div style={overlayStyle}>
+                    {/* Left side: Favicon + Title */}
+                    <div className="flex items-center">
+                      {result.image && result.image.contextLink && (
+                        <img
+                          src={getFaviconUrl(result.image.contextLink)}
+                          alt="favicon"
+                          style={{
+                            width: "16px",
+                            height: "16px",
+                            marginRight: "4px",
+                          }}
+                        />
+                      )}
+                      <p className="text-sm m-0 line-clamp-2">{result.title}</p>
+                    </div>
+
+                    {/* Right side: Action Icons (Edit, Delete, Move) */}
+                    <div className="flex items-center space-x-2">
+                      {/* Edit Icon */}
+                      <button
+                        onClick={() => openEditModal(index)}
+                        className="bg-transparent border-none cursor-pointer"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth="2"
+                          stroke="currentColor"
+                          className="w-5 h-5"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M16.862 2.487a2.25 2.25 0 113.182 3.182L7.136 18.578a4.5 4.5 0 01-1.892 1.131l-2.835.945.945-2.835a4.5 4.5 0 011.131-1.892l12.377-12.44z"
+                          />
+                        </svg>
+                      </button>
+
+                      {/* Delete Icon */}
+                      <button
+                        onClick={() => deleteCard(index)}
+                        className="bg-transparent border-none cursor-pointer"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth="2"
+                          stroke="currentColor"
+                          className="w-5 h-5 text-red-500"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M9.75 9.75l.45 8.25m4.5-8.25l-.45 8.25M6.75 5.25h10.5m-9 
+                              0v-.75a2.25 2.25 0 012.25-2.25h3a2.25 2.25 0 
+                              012.25 2.25v.75m-9 0h9m-9 0h-1.5m10.5 0h1.5M4.5 
+                              5.25h15m-2.25 0v13.5a2.25 2.25 0 
+                              01-2.25 2.25h-6a2.25 2.25 0 
+                              01-2.25-2.25V5.25"
+                          />
+                        </svg>
+                      </button>
+
+                      {/* Move Icon (purely cosmetic, actual dragging is on the card) */}
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth="2"
+                        stroke="currentColor"
+                        className="w-5 h-5 cursor-move"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M9 4.5V3.75a.75.75 0 
+                             111.5 0v.75h3V3.75a.75.75 0 
+                             111.5 0v.75h1.75a2.25 2.25 0 
+                             012.25 2.25v12a2.25 2.25 0 
+                             01-2.25 2.25H7.25a2.25 2.25 0 
+                             01-2.25-2.25v-12a2.25 2.25 0 
+                             012.25-2.25H9z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M9 8.25h6m-6 3h6m-6 3h6"
+                        />
+                      </svg>
+                    </div>
                   </div>
-                </a>
+                </div>
               );
             })
           ) : (
@@ -511,6 +666,7 @@ export default function Results() {
           )}
         </div>
 
+        {/* Back to Search */}
         <button
           onClick={() => router.push("/")}
           className="mt-6 px-4 py-2 bg-blue-600 text-white font-bold rounded-lg"
@@ -518,6 +674,25 @@ export default function Results() {
           Back to Search
         </button>
       </div>
+
+      {/* Stub Edit Modal */}
+      {isModalOpen && modalIndex !== null && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white text-black p-6 rounded shadow-lg w-96 relative">
+            <h2 className="text-xl font-bold mb-4">Edit Link Card (Stub)</h2>
+            <p className="mb-4">
+              This is a placeholder for editing the link card. You can add
+              actual edit fields here (e.g., changing title, image URL, etc.).
+            </p>
+            <button
+              onClick={closeEditModal}
+              className="px-4 py-2 bg-gray-600 text-white rounded"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
