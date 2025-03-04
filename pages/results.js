@@ -51,27 +51,56 @@ export default function Results() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white p-6 relative">
       
-      {/* Toggleable Settings Icon Dropdown */}
-      <div className="absolute top-4 right-4 z-50">
+      {/* Settings Icon and Dropdown using inline styles */}
+      <div style={{ position: "absolute", top: "1rem", right: "1rem", zIndex: 50 }}>
         <button 
           onClick={() => setPanelOpen(!panelOpen)}
-          className="p-2 bg-white text-black rounded-full shadow-lg border border-gray-300"
+          style={{
+            padding: "0.5rem",
+            backgroundColor: "white",
+            color: "black",
+            borderRadius: "50%",
+            boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)",
+            border: "1px solid #d1d5db",
+          }}
         >
-          {/* Inline SVG for a gear (cog) icon */}
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-6 h-6">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="1.5"
+            stroke="currentColor"
+            style={{ width: "1.5rem", height: "1.5rem" }}
+          >
             <path strokeLinecap="round" strokeLinejoin="round" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894a1.125 1.125 0 00.986.95l.963.07c.554.04.92.54.68 1.04l-.383.766a1.125 1.125 0 000 1.06l.383.767c.24.5-.126 1-.68 1.04l-.963.07a1.125 1.125 0 00-.986.95l-.15.893c-.09.543-.56.94-1.11.94h-1.094a1.125 1.125 0 01-1.11-.94l-.15-.893a1.125 1.125 0 00-.986-.95l-.963-.07c-.554-.04-.92-.54-.68-1.04l.383-.767a1.125 1.125 0 000-1.06l-.383-.766c-.24-.5.126-1 .68-1.04l.963-.07a1.125 1.125 0 00.986-.95l.15-.893z" />
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
         </button>
         {panelOpen && (
-          <div className="mt-2 bg-white text-black p-4 rounded-lg shadow-lg w-72 border border-gray-300">
-            <h3 className="text-lg font-bold mb-2">Customize View</h3>
+          <div style={{
+            marginTop: "0.5rem",
+            backgroundColor: "white",
+            color: "black",
+            padding: "1rem",
+            borderRadius: "0.5rem",
+            boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)",
+            width: "18rem",
+            border: "1px solid #d1d5db",
+          }}>
+            <h3 style={{ fontSize: "1.125rem", fontWeight: "bold", marginBottom: "0.5rem" }}>Customize View</h3>
             
-            <label className="block mb-2 text-sm">Grid Columns:</label>
+            <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.875rem" }}>Grid Columns:</label>
             <select
               value={gridCols}
               onChange={(e) => setGridCols(e.target.value)}
-              className="w-full p-2 mb-3 border rounded text-black"
+              style={{
+                width: "100%",
+                padding: "0.5rem",
+                marginBottom: "0.75rem",
+                border: "1px solid #ccc",
+                borderRadius: "0.25rem",
+                color: "black",
+              }}
             >
               <option value="grid-cols-1">1 Column</option>
               <option value="grid-cols-2">2 Columns</option>
@@ -79,11 +108,18 @@ export default function Results() {
               <option value="grid-cols-4">4 Columns</option>
             </select>
 
-            <label className="block mb-2 text-sm">Border Radius:</label>
+            <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.875rem" }}>Border Radius:</label>
             <select
               value={borderRadius}
               onChange={(e) => setBorderRadius(e.target.value)}
-              className="w-full p-2 mb-3 border rounded text-black"
+              style={{
+                width: "100%",
+                padding: "0.5rem",
+                marginBottom: "0.75rem",
+                border: "1px solid #ccc",
+                borderRadius: "0.25rem",
+                color: "black",
+              }}
             >
               <option value="rounded-none">No Rounding</option>
               <option value="rounded-md">Small</option>
@@ -91,11 +127,18 @@ export default function Results() {
               <option value="rounded-xl">Large</option>
             </select>
 
-            <label className="block mb-2 text-sm">Grid Gap:</label>
+            <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.875rem" }}>Grid Gap:</label>
             <select
               value={gap}
               onChange={(e) => setGap(e.target.value)}
-              className="w-full p-2 mb-3 border rounded text-black"
+              style={{
+                width: "100%",
+                padding: "0.5rem",
+                marginBottom: "0.75rem",
+                border: "1px solid #ccc",
+                borderRadius: "0.25rem",
+                color: "black",
+              }}
             >
               <option value="gap-2">Small Gap</option>
               <option value="gap-4">Medium Gap</option>
@@ -155,5 +198,4 @@ export default function Results() {
     </div>
   );
 }
-
 
