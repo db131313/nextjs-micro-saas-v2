@@ -12,9 +12,9 @@ export default function Results() {
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [gridCols, setGridCols] = useState("grid-cols-3");
-  const [borderRadius, setBorderRadius] = useState("rounded-lg");
-  const [gap, setGap] = useState("gap-6");
+  const [gridCols, setGridCols] = useState('grid-cols-3');
+  const [borderRadius, setBorderRadius] = useState('rounded-lg');
+  const [gap, setGap] = useState('gap-6');
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   useEffect(() => {
@@ -64,33 +64,33 @@ export default function Results() {
           <label className="block mb-2 text-sm">Grid Columns:</label>
           <select
             onChange={(e) => setGridCols(e.target.value)}
-            className="w-full p-2 mb-3 border rounded"
+            className="w-full p-2 mb-3 border rounded text-black"
           >
             <option value="grid-cols-1">1 Column</option>
             <option value="grid-cols-2">2 Columns</option>
-            <option value="grid-cols-3">3 Columns</option>
+            <option value="grid-cols-3" selected>3 Columns</option>
             <option value="grid-cols-4">4 Columns</option>
           </select>
 
           <label className="block mb-2 text-sm">Border Radius:</label>
           <select
             onChange={(e) => setBorderRadius(e.target.value)}
-            className="w-full p-2 mb-3 border rounded"
+            className="w-full p-2 mb-3 border rounded text-black"
           >
             <option value="rounded-none">No Rounding</option>
             <option value="rounded-md">Small</option>
-            <option value="rounded-lg">Medium</option>
+            <option value="rounded-lg" selected>Medium</option>
             <option value="rounded-xl">Large</option>
           </select>
 
           <label className="block mb-2 text-sm">Grid Gap:</label>
           <select
             onChange={(e) => setGap(e.target.value)}
-            className="w-full p-2 mb-3 border rounded"
+            className="w-full p-2 mb-3 border rounded text-black"
           >
             <option value="gap-2">Small Gap</option>
             <option value="gap-4">Medium Gap</option>
-            <option value="gap-6">Large Gap</option>
+            <option value="gap-6" selected>Large Gap</option>
           </select>
         </div>
       )}
@@ -143,6 +143,7 @@ export default function Results() {
     </div>
   );
 }
+
 
 
 
