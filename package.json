@@ -1,5 +1,5 @@
 {
-  "name": "nextjs-micro-saas-v3",
+  "name": "nextjs-micro-saas",
   "version": "1.0.0",
   "private": true,
   "scripts": {
@@ -11,9 +11,10 @@
     "next": "latest",
     "react": "latest",
     "react-dom": "latest",
-    "react-icons": "^4.7.0",
+    "react-icons": "^4.10.1",
     "tailwindcss": "^3.0.0",
     "postcss": "^8.0.0",
     "autoprefixer": "^10.0.0"
   }
 }
+
