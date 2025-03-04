@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 
-// Use your provided API keys:
 const API_KEY = "AIzaSyDlc54LBF2pEDWQiC7JUG7kB5PaFsoytAE";
 const SEARCH_ENGINE_ID = "615b8aae2d40343b8";
 
@@ -13,9 +12,10 @@ export default function Results() {
   const [error, setError] = useState(null);
 
   // ----- Grid & Link Card Controls -----
-  const [gridLayout, setGridLayout] = useState("simple-grid"); // "simple-grid", "masonry-vertical", "masonry-horizontal"
-  const [linkCardHeight, setLinkCardHeight] = useState(200); // in px
-  const [linkCardWidth, setLinkCardWidth] = useState(200); // in px
+  // Default grid layout set to masonry vertical
+  const [gridLayout, setGridLayout] = useState("masonry-vertical"); // "simple-grid", "masonry-vertical", "masonry-horizontal"
+  const [linkCardHeight, setLinkCardHeight] = useState(250); // in px
+  const [linkCardWidth, setLinkCardWidth] = useState(250); // in px (used for simple grid or horizontal masonry)
   const [gridGap, setGridGap] = useState(10); // in px
   const [cardBorderRadius, setCardBorderRadius] = useState(8); // in px
   const [cardBorderWidth, setCardBorderWidth] = useState(1); // in px
@@ -24,9 +24,10 @@ export default function Results() {
   // ----- Link Text & Card Content Controls -----
   const [linkFontFamily, setLinkFontFamily] = useState("Arial, sans-serif");
   const [linkFontWeight, setLinkFontWeight] = useState("400");
-  const [linkFontColor, setLinkFontColor] = useState("#000000");
+  const [linkFontColor, setLinkFontColor] = useState("#ffffff");
   const [linkTextPosition, setLinkTextPosition] = useState("bottom"); // "top", "middle", "bottom"
-  const [linkBackgroundColor, setLinkBackgroundColor] = useState("#ffffff");
+  // Use a semi‑transparent background for text readability over images
+  const [linkBackgroundColor, setLinkBackgroundColor] = useState("rgba(0,0,0,0.4)");
   const [linkPadding, setLinkPadding] = useState(10); // in px
 
   // ----- Full Page Background Controls -----
@@ -38,10 +39,8 @@ export default function Results() {
   // Dropdown panel toggle for styling controls
   const [panelOpen, setPanelOpen] = useState(false);
 
-  // Ref for background video iframe container (if needed)
   const videoRef = useRef(null);
 
-  // Fetch images (or media) from Google Custom Search
   useEffect(() => {
     if (query) {
       fetchGoogleImages(query);
@@ -70,7 +69,6 @@ export default function Results() {
     setLoading(false);
   };
 
-  // Handle background image upload
   const handleBgImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -79,10 +77,14 @@ export default function Results() {
     }
   };
 
-  // Define background style
+  // Define full-page background style
   const backgroundStyle = {
     backgroundColor: bgColor,
-    backgroundImage: bgGradient ? bgGradient : bgImage ? `url(${bgImage})` : "none",
+    backgroundImage: bgGradient
+      ? bgGradient
+      : bgImage
+      ? `url(${bgImage})`
+      : "none",
     backgroundSize: bgImage ? "cover" : "auto",
     backgroundRepeat: "no-repeat",
     backgroundPosition: "center",
@@ -103,34 +105,35 @@ export default function Results() {
     gridContainerStyle.gap = `${gridGap}px`;
   }
 
-  // Card style for each link card
+  // Card container style – note: no inner image sizing here, handled below
   const cardStyle = {
     width: gridLayout === "simple-grid" ? "100%" : `${linkCardWidth}px`,
     height: `${linkCardHeight}px`,
     borderRadius: `${cardBorderRadius}px`,
     border: `${cardBorderWidth}px solid ${cardBorderColor}`,
-    backgroundColor: linkBackgroundColor,
-    padding: `${linkPadding}px`,
-    overflow: "hidden",
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: linkTextPosition === "top" ? "flex-start" : linkTextPosition === "middle" ? "center" : "flex-end",
     position: "relative",
+    overflow: "hidden",
   };
 
-  // Text style for link card text
-  const textStyle = {
+  // Overlay for link text, placed at the bottom (or as configured)
+  const overlayStyle = {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: linkBackgroundColor,
+    padding: `${linkPadding}px`,
     fontFamily: linkFontFamily,
     fontWeight: linkFontWeight,
     color: linkFontColor,
-    backgroundColor: "transparent",
-    display: "-webkit-box",
-    WebkitLineClamp: 2,
-    WebkitBoxOrient: "vertical",
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    margin: 0,
-    padding: 0,
+    display: "flex",
+    alignItems:
+      linkTextPosition === "top"
+        ? "flex-start"
+        : linkTextPosition === "middle"
+        ? "center"
+        : "flex-end",
+    zIndex: 10,
   };
 
   // Helper function to get favicon using Google's favicon service
@@ -168,7 +171,6 @@ export default function Results() {
             onClick={() => setPanelOpen(!panelOpen)}
             className="p-2 bg-white text-black rounded-full shadow-lg border border-gray-300"
           >
-            {/* Inline gear icon */}
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
@@ -198,7 +200,9 @@ export default function Results() {
                   <option value="masonry-horizontal">Masonry Horizontal</option>
                 </select>
 
-                <label className="block text-sm mb-1">Link Card Height: {linkCardHeight}px</label>
+                <label className="block text-sm mb-1">
+                  Link Card Height: {linkCardHeight}px
+                </label>
                 <input
                   type="range"
                   min="100"
@@ -208,7 +212,9 @@ export default function Results() {
                   className="w-full mb-2"
                 />
 
-                <label className="block text-sm mb-1">Link Card Width: {linkCardWidth}px</label>
+                <label className="block text-sm mb-1">
+                  Link Card Width: {linkCardWidth}px
+                </label>
                 <input
                   type="range"
                   min="100"
@@ -231,7 +237,9 @@ export default function Results() {
 
               {/* Border & Card Styling */}
               <div className="mb-4">
-                <label className="block text-sm mb-1">Border Radius: {cardBorderRadius}px</label>
+                <label className="block text-sm mb-1">
+                  Border Radius: {cardBorderRadius}px
+                </label>
                 <input
                   type="range"
                   min="0"
@@ -241,7 +249,9 @@ export default function Results() {
                   className="w-full mb-2"
                 />
 
-                <label className="block text-sm mb-1">Border Width: {cardBorderWidth}px</label>
+                <label className="block text-sm mb-1">
+                  Border Width: {cardBorderWidth}px
+                </label>
                 <input
                   type="range"
                   min="0"
@@ -269,9 +279,15 @@ export default function Results() {
                   className="w-full p-2 border rounded text-black mb-2"
                 >
                   <option value="Arial, sans-serif">Arial</option>
-                  <option value="'Helvetica Neue', sans-serif">Helvetica Neue</option>
-                  <option value="'Times New Roman', serif">Times New Roman</option>
-                  <option value="'Courier New', monospace">Courier New</option>
+                  <option value="'Helvetica Neue', sans-serif">
+                    Helvetica Neue
+                  </option>
+                  <option value="'Times New Roman', serif">
+                    Times New Roman
+                  </option>
+                  <option value="'Courier New', monospace">
+                    Courier New
+                  </option>
                   <option value="Verdana, sans-serif">Verdana</option>
                 </select>
 
@@ -307,7 +323,9 @@ export default function Results() {
                   <option value="bottom">Bottom</option>
                 </select>
 
-                <label className="block text-sm mb-1">Link Background Color:</label>
+                <label className="block text-sm mb-1">
+                  Link Background Color:
+                </label>
                 <input
                   type="color"
                   value={linkBackgroundColor}
@@ -315,7 +333,9 @@ export default function Results() {
                   className="w-full mb-2 h-8 p-0"
                 />
 
-                <label className="block text-sm mb-1">Link Padding: {linkPadding}px</label>
+                <label className="block text-sm mb-1">
+                  Link Padding: {linkPadding}px
+                </label>
                 <input
                   type="range"
                   min="0"
@@ -337,21 +357,35 @@ export default function Results() {
                   className="w-full mb-2 h-8 p-0"
                 />
 
-                <label className="block text-sm mb-1">Background Gradient:</label>
+                <label className="block text-sm mb-1">
+                  Background Gradient:
+                </label>
                 <select
                   value={bgGradient}
                   onChange={(e) => setBgGradient(e.target.value)}
                   className="w-full p-2 border rounded text-black mb-2"
                 >
                   <option value="">None</option>
-                  <option value="linear-gradient(45deg, #ff6b6b, #f06595)">Sunset</option>
-                  <option value="linear-gradient(45deg, #74c0fc, #4dabf7)">Skyline</option>
-                  <option value="linear-gradient(45deg, #a9e34b, #74c69d)">Mint</option>
-                  <option value="linear-gradient(45deg, #f59f00, #f76707)">Orange Burst</option>
-                  <option value="linear-gradient(45deg, #845ef7, #5c7cfa)">Violet Haze</option>
+                  <option value="linear-gradient(45deg, #ff6b6b, #f06595)">
+                    Sunset
+                  </option>
+                  <option value="linear-gradient(45deg, #74c0fc, #4dabf7)">
+                    Skyline
+                  </option>
+                  <option value="linear-gradient(45deg, #a9e34b, #74c69d)">
+                    Mint
+                  </option>
+                  <option value="linear-gradient(45deg, #f59f00, #f76707)">
+                    Orange Burst
+                  </option>
+                  <option value="linear-gradient(45deg, #845ef7, #5c7cfa)">
+                    Violet Haze
+                  </option>
                 </select>
 
-                <label className="block text-sm mb-1">Background Image:</label>
+                <label className="block text-sm mb-1">
+                  Background Image:
+                </label>
                 <input
                   type="file"
                   accept="image/*"
@@ -359,7 +393,9 @@ export default function Results() {
                   className="w-full mb-2"
                 />
 
-                <label className="block text-sm mb-1">Background Video (YouTube URL):</label>
+                <label className="block text-sm mb-1">
+                  Background Video (YouTube URL):
+                </label>
                 <input
                   type="text"
                   placeholder="https://www.youtube.com/embed/VIDEO_ID"
@@ -380,7 +416,9 @@ export default function Results() {
           className="w-full max-w-md p-4 border border-gray-300 rounded-lg mb-4 text-black"
           onKeyPress={(e) => {
             if (e.key === "Enter") {
-              router.push(`/results?query=${encodeURIComponent(e.target.value)}`);
+              router.push(
+                `/results?query=${encodeURIComponent(e.target.value)}`
+              );
             }
           }}
         />
@@ -391,26 +429,31 @@ export default function Results() {
         {loading && <p className="text-gray-400">Loading results...</p>}
         {error && <p className="text-red-500">{error}</p>}
 
-        {/* Results Grid */}
-        <div style={gridContainerStyle} className="w-full max-w-5xl">
+        {/* Results Grid: full width container */}
+        <div style={gridContainerStyle} className="w-full">
           {searchResults.length > 0 ? (
             searchResults.map((result, index) => (
               <a
                 key={index}
                 href={result.image.contextLink}
                 style={cardStyle}
-                className="mb-4 break-inside-avoid"
+                className="mb-4 break-inside-avoid relative"
               >
-                {/* Display image (or media placeholder) */}
                 {result.link && (
                   <img
                     src={result.link}
                     alt={result.title}
-                    style={{ width: "100%", height: "60%", objectFit: "cover", borderRadius: `${cardBorderRadius}px` }}
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                    }}
                   />
                 )}
-                {/* Favicon & link text */}
-                <div className="flex items-center mt-2">
+                <div style={overlayStyle} className="relative z-10 flex items-center">
                   {result.image && result.image.contextLink && (
                     <img
                       src={getFaviconUrl(result.image.contextLink)}
@@ -418,9 +461,7 @@ export default function Results() {
                       style={{ width: "16px", height: "16px", marginRight: "4px" }}
                     />
                   )}
-                  <p style={textStyle} className="text-sm">
-                    {result.title}
-                  </p>
+                  <p style={{ margin: 0 }}>{result.title}</p>
                 </div>
               </a>
             ))
@@ -429,7 +470,6 @@ export default function Results() {
           )}
         </div>
 
-        {/* Back to Search Button */}
         <button
           onClick={() => router.push("/")}
           className="mt-6 px-4 py-2 bg-blue-600 text-white font-bold rounded-lg"
@@ -440,4 +480,3 @@ export default function Results() {
     </div>
   );
 }
-
