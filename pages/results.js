@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 
-// Your API keys
+// Your API keys from previous conversations:
 const API_KEY = "AIzaSyDlc54LBF2pEDWQiC7JUG7kB5PaFsoytAE";
 const SEARCH_ENGINE_ID = "615b8aae2d40343b8";
 
@@ -14,7 +14,7 @@ export default function Results() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // --- MOBILE DETECTION (viewport < 700px) ---
+  // --- MOBILE DETECTION (viewport width < 700px) ---
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 700);
@@ -23,13 +23,13 @@ export default function Results() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // --- STYLE CONTROL STATES ---
+  // --- STYLE CONTROL STATES & THEME PRESETS ---
   // Layout modes: "masonry-vertical", "simple-grid", "masonry-horizontal", "linktree", "slider"
   const [gridLayout, setGridLayout] = useState("masonry-vertical");
   const [linkCardWidth, setLinkCardWidth] = useState(250);
-  const [linkCardHeight, setLinkCardHeight] = useState(250);
+  const [linkCardHeight, setLinkCardHeight] = useState(250); // used for slider theme
   const [gridGap, setGridGap] = useState(10);
-  // Default theme: no border (for most themes, can be overridden)
+  // Default theme: no border style
   const [cardBorderRadius, setCardBorderRadius] = useState(0);
   const [cardBorderWidth, setCardBorderWidth] = useState(0);
   const [cardBorderColor, setCardBorderColor] = useState("#d1d5db");
@@ -39,7 +39,7 @@ export default function Results() {
   const [linkFontWeight, setLinkFontWeight] = useState("400");
   const [linkFontColor, setLinkFontColor] = useState("#ffffff");
   const [linkFontSize, setLinkFontSize] = useState(14);
-  const [linkTextPosition, setLinkTextPosition] = useState("bottom");
+  const [linkTextPosition, setLinkTextPosition] = useState("bottom"); // top, middle, or bottom
   const [linkBackgroundColor, setLinkBackgroundColor] = useState("rgba(0,0,0,0.4)");
   const [linkPadding, setLinkPadding] = useState(10);
 
@@ -49,10 +49,10 @@ export default function Results() {
   const [bgImage, setBgImage] = useState(null);
   const [bgVideo, setBgVideo] = useState("");
 
-  // For the "Huge Slider" theme
+  // Additional state for the Huge Slider theme
   const [sliderDirection, setSliderDirection] = useState("horizontal");
 
-  // Theme preset selection
+  // Theme preset selection (dropdown)
   const [selectedTheme, setSelectedTheme] = useState("");
 
   // Toggle for style control panel dropdown
@@ -78,7 +78,7 @@ export default function Results() {
       } else if (!data.items || data.items.length === 0) {
         setError("No results found.");
       } else {
-        // Filter: only include items with an image and remove duplicates
+        // Only include items with an image and remove duplicate image links
         const seen = new Set();
         const uniqueResults = data.items.filter((item) => {
           if (!item.image || !item.link) return false;
@@ -130,8 +130,8 @@ export default function Results() {
 
   // --- THEME PRESET FUNCTION ---
   function applyTheme(theme) {
-    // Theme 1: Link Tree
     if (theme === "Link Tree") {
+      // Display links as horizontal rows like Linktree
       setGridLayout("linktree");
       setLinkCardWidth(100); // thumbnail size
       setGridGap(10);
@@ -145,9 +145,7 @@ export default function Results() {
       setLinkPadding(5);
       setBgColor("#ffffff");
       setBgGradient("");
-    }
-    // Theme 2: Rounded Grid
-    else if (theme === "Rounded Grid") {
+    } else if (theme === "Rounded Grid") {
       setGridLayout("simple-grid");
       setLinkCardWidth(250);
       setGridGap(10);
@@ -162,9 +160,7 @@ export default function Results() {
       setLinkPadding(10);
       setBgColor("#f7f7f7");
       setBgGradient("");
-    }
-    // Theme 3: Unexpected (rotated cards)
-    else if (theme === "Unexpected") {
+    } else if (theme === "Unexpected") {
       setGridLayout("masonry-vertical");
       setGridGap(10);
       setCardBorderWidth(1);
@@ -178,11 +174,9 @@ export default function Results() {
       setLinkPadding(8);
       setBgColor("#000000");
       setBgGradient("linear-gradient(45deg, #ff6b6b, #f06595)");
-    }
-    // Theme 4: Huge Slider
-    else if (theme === "Huge Slider") {
+    } else if (theme === "Huge Slider") {
       setGridLayout("slider");
-      setSliderDirection("horizontal"); // default direction
+      setSliderDirection("horizontal");
       setLinkCardWidth(300);
       setLinkCardHeight(300);
       setGridGap(20);
@@ -197,9 +191,7 @@ export default function Results() {
       setLinkPadding(12);
       setBgColor("#000000");
       setBgGradient("linear-gradient(45deg, #00c6ff, #0072ff)");
-    }
-    // Theme 5: Amorphous Blobs
-    else if (theme === "Amorphous Blobs") {
+    } else if (theme === "Amorphous Blobs") {
       setGridLayout("masonry-vertical");
       setGridGap(10);
       setCardBorderWidth(0);
@@ -213,7 +205,7 @@ export default function Results() {
       setBgColor("#222222");
       setBgGradient("linear-gradient(45deg, #ff00ff, #00ffff)");
     } else {
-      // Default: reset to original defaults
+      // Default/reset theme
       setGridLayout("masonry-vertical");
       setLinkCardWidth(250);
       setLinkCardHeight(250);
@@ -231,7 +223,7 @@ export default function Results() {
     }
   }
 
-  // When selectedTheme changes, apply it.
+  // Apply theme preset whenever selectedTheme changes
   useEffect(() => {
     applyTheme(selectedTheme);
   }, [selectedTheme]);
@@ -250,26 +242,31 @@ export default function Results() {
     backgroundRepeat: "no-repeat",
     backgroundPosition: "center",
     minHeight: "100vh",
-    paddingTop: "70px", // space for search input
+    paddingTop: "70px", // space for top-left search input
   };
 
-  // Container style based on layout mode
-  let containerStyle;
+  // Container style for results:
+  // "masonry-vertical": use CSS columns (1 column on mobile, 3 on desktop)
+  // "simple-grid": use grid
+  // "masonry-horizontal": use flex
+  // "linktree": vertical list (full-width horizontal cards)
+  // "slider": slider style (horizontal or vertical, based on sliderDirection)
+  let containerStyleFinal = {};
   if (gridLayout === "masonry-vertical") {
-    containerStyle = {
+    containerStyleFinal = {
       columnCount: isMobile ? 1 : 3,
       columnGap: `${gridGap}px`,
       width: "100%",
     };
   } else if (gridLayout === "simple-grid") {
-    containerStyle = {
+    containerStyleFinal = {
       display: "grid",
       gridTemplateColumns: `repeat(auto-fill, minmax(${linkCardWidth}px, 1fr))`,
       gap: `${gridGap}px`,
       width: "100%",
     };
   } else if (gridLayout === "masonry-horizontal") {
-    containerStyle = {
+    containerStyleFinal = {
       display: "flex",
       flexWrap: "nowrap",
       overflowX: "auto",
@@ -277,16 +274,14 @@ export default function Results() {
       width: "100%",
     };
   } else if (gridLayout === "linktree") {
-    // Link Tree layout: vertical list, full-width horizontal cards
-    containerStyle = {
+    containerStyleFinal = {
       display: "flex",
       flexDirection: "column",
       gap: `${gridGap}px`,
       width: "100%",
     };
   } else if (gridLayout === "slider") {
-    // Slider layout: use sliderDirection to choose flex direction
-    containerStyle =
+    containerStyleFinal =
       sliderDirection === "vertical"
         ? {
             display: "flex",
@@ -304,8 +299,7 @@ export default function Results() {
           };
   }
 
-  // Card style – for masonry and simple grid, let images retain natural aspect ratio.
-  // For "linktree", we override with a horizontal layout.
+  // Default card style (for masonry and grid, etc.)
   const cardStyle = {
     position: "relative",
     overflow: "hidden",
@@ -324,7 +318,7 @@ export default function Results() {
     cursor: "default",
   };
 
-  // For theme "Link Tree", we render cards as horizontal flex containers.
+  // For "Link Tree" theme, override card style to horizontal row layout
   const linkTreeCardStyle = {
     display: "flex",
     alignItems: "center",
@@ -335,7 +329,7 @@ export default function Results() {
     width: "100%",
   };
 
-  // Overlay style for link text and (if applicable) icons
+  // Overlay style for link text and action icons
   const overlayDivStyle = {
     position: "absolute",
     left: 0,
@@ -358,12 +352,7 @@ export default function Results() {
     zIndex: 10,
   };
 
-  // --- STYLE: Additional classes for theme "Amorphous Blobs" ---
-  // We use a CSS keyframes animation to create a blob effect.
-  // This is applied via a "blob" class that is conditionally added to cards.
-  const blobClass = selectedTheme === "Amorphous Blobs" ? "blob" : "";
-
-  // Helper: get favicon URL via Google's service
+  // Helper: get favicon URL
   const getFaviconUrl = (url) => {
     try {
       const { hostname } = new URL(url);
@@ -505,6 +494,21 @@ export default function Results() {
                 <option value="slider">Huge Slider</option>
               </select>
             </div>
+            {(gridLayout === "simple-grid" || gridLayout === "masonry-horizontal") && (
+              <div style={{ marginBottom: "10px" }}>
+                <label style={{ fontSize: "14px", marginBottom: "4px", display: "block" }}>
+                  Link Card Width: {linkCardWidth}px
+                </label>
+                <input
+                  type="range"
+                  min="100"
+                  max="500"
+                  value={linkCardWidth}
+                  onChange={(e) => setLinkCardWidth(Number(e.target.value))}
+                  style={{ width: "100%" }}
+                />
+              </div>
+            )}
             {gridLayout === "slider" && (
               <div style={{ marginBottom: "10px" }}>
                 <label style={{ fontSize: "14px", marginBottom: "4px", display: "block" }}>
@@ -524,21 +528,6 @@ export default function Results() {
                   <option value="horizontal">Horizontal</option>
                   <option value="vertical">Vertical</option>
                 </select>
-              </div>
-            )}
-            {(gridLayout === "simple-grid" || gridLayout === "masonry-horizontal") && (
-              <div style={{ marginBottom: "10px" }}>
-                <label style={{ fontSize: "14px", marginBottom: "4px", display: "block" }}>
-                  Link Card Width: {linkCardWidth}px
-                </label>
-                <input
-                  type="range"
-                  min="100"
-                  max="500"
-                  value={linkCardWidth}
-                  onChange={(e) => setLinkCardWidth(Number(e.target.value))}
-                  style={{ width: "100%" }}
-                />
               </div>
             )}
             <div style={{ marginBottom: "10px" }}>
@@ -707,7 +696,9 @@ export default function Results() {
             </div>
             {/* Full‑Page Background Controls */}
             <div style={{ marginBottom: "10px" }}>
-              <h4 style={{ fontSize: "16px", fontWeight: "bold", marginBottom: "6px" }}>Background</h4>
+              <h4 style={{ fontSize: "16px", fontWeight: "bold", marginBottom: "6px" }}>
+                Background
+              </h4>
               <div style={{ marginBottom: "10px" }}>
                 <label style={{ fontSize: "14px", marginBottom: "4px", display: "block" }}>
                   Background Color:
@@ -781,10 +772,10 @@ export default function Results() {
         {loading && <p style={{ color: "#aaa", textAlign: "center" }}>Loading...</p>}
         {error && <p style={{ color: "red", textAlign: "center" }}>{error}</p>}
         {searchResults.map((item, index) => {
-          // If "Link Tree" theme is selected, render cards as horizontal rows
           if (gridLayout === "linktree") {
+            // Render Link Tree style: horizontal row with small thumbnail
             return (
-              <div key={index} style={linkTreeCardStyle}>
+              <div key={index} style={{ display: "flex", alignItems: "center", padding: "10px", border: "none", width: "100%", marginBottom: `${gridGap}px` }}>
                 {item.link && (
                   <img
                     src={item.link}
@@ -793,33 +784,18 @@ export default function Results() {
                   />
                 )}
                 <div style={{ flex: 1, overflow: "hidden" }}>
-                  <span
-                    style={{
-                      fontFamily: linkFontFamily,
-                      fontWeight: linkFontWeight,
-                      color: linkFontColor,
-                      fontSize: `${linkFontSize}px`,
-                      display: "-webkit-box",
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: "vertical",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                    }}
-                  >
+                  <span style={{ fontFamily: linkFontFamily, fontWeight: linkFontWeight, color: linkFontColor, fontSize: `${linkFontSize}px`, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", textOverflow: "ellipsis" }}>
                     {item.title}
                   </span>
                 </div>
               </div>
             );
           }
-          // For theme "Unexpected", add a slight random rotation
-          const extraStyle =
-            selectedTheme === "Unexpected"
-              ? { transform: `rotate(${Math.random() * 10 - 5}deg)` }
-              : {};
-          // For theme "Amorphous Blobs", add a class for blob animation (defined below)
+          // For other themes:
+          // For "Unexpected", add a slight random rotation
+          const extraStyle = selectedTheme === "Unexpected" ? { transform: `rotate(${Math.random() * 10 - 5}deg)` } : {};
+          // For "Amorphous Blobs", add a blob animation class (see style block below)
           const themeClass = selectedTheme === "Amorphous Blobs" ? "blob" : "";
-          // For slider theme, we might want a fixed size card
           return (
             <div key={index} style={{ ...cardStyle, ...extraStyle }} className={`relative break-inside-avoid ${themeClass}`}>
               {item.link && (
@@ -850,7 +826,7 @@ export default function Results() {
                     {item.title}
                   </span>
                 </div>
-                {/* Action Icons */}
+                {/* Action Icons: Edit, Delete, Move */}
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                   <button
                     onClick={() => console.log("Edit card", index)}
@@ -920,7 +896,7 @@ export default function Results() {
         })}
       </div>
 
-      {/* --- STYLE JSX for Amorphous Blobs Theme --- */}
+      {/* STYLE for Amorphous Blobs Animation */}
       <style jsx>{`
         @keyframes blob {
           0% {
