@@ -14,7 +14,7 @@ export default function Results() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Mobile detection (viewport width < 700px)
+  // Mobile detection (viewport width under 700px)
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 700);
@@ -23,7 +23,36 @@ export default function Results() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Fetch search results when query changes
+  // --- STYLE CONTROL PANEL STATES ---
+  // Grid Layout: "masonry-vertical", "simple-grid", "masonry-horizontal"
+  const [gridLayout, setGridLayout] = useState("masonry-vertical");
+  // For simple grid/horizontal layouts
+  const [linkCardWidth, setLinkCardWidth] = useState(250);
+  const [gridGap, setGridGap] = useState(10);
+  // Default theme: no border style
+  const [cardBorderRadius, setCardBorderRadius] = useState(0);
+  const [cardBorderWidth, setCardBorderWidth] = useState(0);
+  const [cardBorderColor, setCardBorderColor] = useState("#d1d5db");
+
+  // Link text styling
+  const [linkFontFamily, setLinkFontFamily] = useState("Arial, sans-serif");
+  const [linkFontWeight, setLinkFontWeight] = useState("400");
+  const [linkFontColor, setLinkFontColor] = useState("#ffffff");
+  const [linkFontSize, setLinkFontSize] = useState(14);
+  const [linkTextPosition, setLinkTextPosition] = useState("bottom");
+  const [linkBackgroundColor, setLinkBackgroundColor] = useState("rgba(0,0,0,0.4)");
+  const [linkPadding, setLinkPadding] = useState(10);
+
+  // Full-page background styling
+  const [bgColor, setBgColor] = useState("#111111");
+  const [bgGradient, setBgGradient] = useState("");
+  const [bgImage, setBgImage] = useState(null);
+  const [bgVideo, setBgVideo] = useState("");
+
+  // Control Panel toggle
+  const [panelOpen, setPanelOpen] = useState(false);
+
+  // --- FETCH SEARCH RESULTS ---
   useEffect(() => {
     if (query) {
       fetchSearchResults(query);
@@ -43,7 +72,7 @@ export default function Results() {
       } else if (!data.items || data.items.length === 0) {
         setError("No results found.");
       } else {
-        // Filter out items without an image and remove duplicate image links
+        // Filter: only include items with an image & remove duplicates
         const seen = new Set();
         const uniqueResults = data.items.filter((item) => {
           if (!item.image || !item.link) return false;
@@ -60,63 +89,144 @@ export default function Results() {
     setLoading(false);
   };
 
-  // Full-page background style (simple dark background)
+  // --- BACKGROUND IMAGE UPLOAD ---
+  const handleBgImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setBgImage(url);
+    }
+  };
+
+  // --- YOUTUBE BACKGROUND EMBED ---
+  function parseYouTubeUrl(url) {
+    if (!url) return null;
+    try {
+      if (url.includes("/embed/")) {
+        return url.split("/embed/")[1].split(/[?&]/)[0];
+      }
+      if (url.includes("youtu.be/")) {
+        return url.split("youtu.be/")[1].split(/[?&]/)[0];
+      }
+      if (url.includes("watch?v=")) {
+        return url.split("watch?v=")[1].split(/[?&]/)[0];
+      }
+    } catch {
+      return null;
+    }
+    return null;
+  }
+  function getYouTubeEmbedUrl(rawUrl) {
+    const vid = parseYouTubeUrl(rawUrl);
+    if (!vid) return null;
+    return `https://www.youtube.com/embed/${vid}?autoplay=1&mute=1&loop=1&start=0&end=10&playlist=${vid}`;
+  }
+  const embedUrl = getYouTubeEmbedUrl(bgVideo);
+
+  // --- DYNAMIC STYLES ---
+
+  // Full-page background style
   const backgroundStyle = {
-    backgroundColor: "#111111",
+    backgroundColor: bgColor,
+    backgroundImage: bgGradient ? bgGradient : bgImage ? `url(${bgImage})` : "none",
+    backgroundSize: bgImage ? "cover" : "auto",
+    backgroundRepeat: "no-repeat",
+    backgroundPosition: "center",
     minHeight: "100vh",
     paddingTop: "70px", // leave room for the top-left search input
   };
 
-  // Container style for masonry vertical layout using CSS columns.
-  // On mobile, force one column; otherwise, use three columns.
-  const containerStyle = isMobile
-    ? { columnCount: 1, columnGap: "10px", width: "100%" }
-    : { columnCount: 3, columnGap: "10px", width: "100%" };
+  // Container style for masonry layout
+  let containerStyle = {};
+  if (gridLayout === "masonry-vertical") {
+    containerStyle = {
+      columnCount: isMobile ? 1 : 3,
+      columnGap: `${gridGap}px`,
+      width: "100%",
+    };
+  } else if (gridLayout === "simple-grid") {
+    containerStyle = {
+      display: "grid",
+      gridTemplateColumns: `repeat(auto-fill, minmax(${linkCardWidth}px, 1fr))`,
+      gap: `${gridGap}px`,
+      width: "100%",
+    };
+  } else if (gridLayout === "masonry-horizontal") {
+    containerStyle = {
+      display: "flex",
+      flexWrap: "nowrap",
+      overflowX: "auto",
+      gap: `${gridGap}px`,
+      width: "100%",
+    };
+  }
 
-  // Default card style: no border and no border radius.
+  // Default card style (for masonry, let images keep their natural aspect ratio)
   const cardStyle = {
     position: "relative",
     overflow: "hidden",
-    borderRadius: "0px",
-    border: "0px solid transparent",
-    marginBottom: "10px",
-    width: "100%",
-    // Ensure cards don't break across columns
+    borderRadius: `${cardBorderRadius}px`,
+    border: `${cardBorderWidth}px solid ${cardBorderColor}`,
+    marginBottom: gridLayout === "masonry-vertical" ? `${gridGap}px` : undefined,
+    width: (gridLayout === "simple-grid" || gridLayout === "masonry-horizontal")
+      ? `${linkCardWidth}px`
+      : "100%",
     breakInside: "avoid",
     WebkitColumnBreakInside: "avoid",
     MozColumnBreakInside: "avoid",
+    cursor: "default",
   };
 
-  // Overlay style for link text and favicon
-  const overlayStyle = {
+  // Overlay style for link text and (if needed) icons
+  const overlayDivStyle = {
     position: "absolute",
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: "rgba(0,0,0,0.4)",
-    padding: "5px",
-    fontFamily: "Arial, sans-serif",
-    fontWeight: "400",
-    color: "#ffffff",
-    fontSize: "14px",
+    backgroundColor: linkBackgroundColor,
+    padding: `${linkPadding}px`,
+    fontFamily: linkFontFamily,
+    fontWeight: linkFontWeight,
+    color: linkFontColor,
+    fontSize: `${linkFontSize}px`,
     display: "flex",
-    alignItems: "center",
+    alignItems:
+      linkTextPosition === "top"
+        ? "flex-start"
+        : linkTextPosition === "middle"
+        ? "center"
+        : "flex-end",
     justifyContent: "space-between",
     zIndex: 10,
   };
 
-  // Helper to get favicon using Google's service
+  // Helper: get favicon URL via Google's service
   const getFaviconUrl = (url) => {
     try {
       const { hostname } = new URL(url);
       return `https://www.google.com/s2/favicons?domain=${hostname}`;
-    } catch (e) {
+    } catch {
       return "";
     }
   };
 
   return (
     <div style={backgroundStyle}>
+      {/* Optional Background Video */}
+      {embedUrl && (
+        <div className="absolute inset-0 z-[-1]">
+          <iframe
+            width="100%"
+            height="100%"
+            src={embedUrl}
+            frameBorder="0"
+            allow="autoplay; encrypted-media"
+            allowFullScreen
+            className="w-full h-full object-cover"
+          ></iframe>
+        </div>
+      )}
+
       {/* Search input in top-left */}
       <div style={{ position: "absolute", top: "10px", left: "10px", zIndex: 50 }}>
         <input
@@ -139,12 +249,329 @@ export default function Results() {
         />
       </div>
 
-      {/* Results container */}
+      {/* Style Control Panel Toggle (gear icon) at top-right */}
+      <div style={{ position: "absolute", top: "10px", right: "10px", zIndex: 50 }}>
+        <button
+          onClick={() => setPanelOpen(!panelOpen)}
+          style={{
+            padding: "8px",
+            background: "#fff",
+            color: "#000",
+            border: "1px solid #ccc",
+            borderRadius: "50%",
+            cursor: "pointer",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="2"
+            stroke="currentColor"
+            style={{ width: "24px", height: "24px" }}
+          >
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l0 0a1.65 1.65 0 0 1-2.33 2.33l0 0a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 1-2.11 0 1.65 1.65 0 0 0-1.82.33l0 0a1.65 1.65 0 0 1-2.33-2.33l0 0a1.65 1.65 0 0 0-.33-1.82 1.65 1.65 0 0 1 0-2.11 1.65 1.65 0 0 0 .33-1.82l0 0a1.65 1.65 0 0 1 2.33-2.33l0 0a1.65 1.65 0 0 0 1.82.33 1.65 1.65 0 0 1 2.11 0 1.65 1.65 0 0 0 1.82-.33l0 0a1.65 1.65 0 0 1 2.33 2.33l0 0a1.65 1.65 0 0 0 .33 1.82 1.65 1.65 0 0 1 0 2.11z" />
+          </svg>
+        </button>
+        {panelOpen && (
+          <div
+            style={{
+              marginTop: "10px",
+              background: "#fff",
+              color: "#000",
+              padding: "16px",
+              border: "1px solid #ccc",
+              borderRadius: "8px",
+              maxHeight: "80vh",
+              overflowY: "auto",
+              width: "300px",
+              position: "absolute",
+              right: "10px",
+              top: "60px",
+              zIndex: 50,
+            }}
+          >
+            <h3 style={{ fontSize: "18px", fontWeight: "bold", marginBottom: "10px" }}>
+              Customize View
+            </h3>
+            {/* Grid Layout & Dimensions */}
+            <div style={{ marginBottom: "10px" }}>
+              <label style={{ fontSize: "14px", marginBottom: "4px", display: "block" }}>
+                Grid Layout:
+              </label>
+              <select
+                value={gridLayout}
+                onChange={(e) => setGridLayout(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "6px",
+                  fontSize: "14px",
+                  border: "1px solid #ccc",
+                  borderRadius: "4px",
+                }}
+              >
+                <option value="masonry-vertical">Masonry Vertical</option>
+                <option value="simple-grid">Simple Grid</option>
+                <option value="masonry-horizontal">Masonry Horizontal</option>
+              </select>
+            </div>
+            {(gridLayout === "simple-grid" || gridLayout === "masonry-horizontal") && (
+              <div style={{ marginBottom: "10px" }}>
+                <label style={{ fontSize: "14px", marginBottom: "4px", display: "block" }}>
+                  Link Card Width: {linkCardWidth}px
+                </label>
+                <input
+                  type="range"
+                  min="100"
+                  max="500"
+                  value={linkCardWidth}
+                  onChange={(e) => setLinkCardWidth(Number(e.target.value))}
+                  style={{ width: "100%" }}
+                />
+              </div>
+            )}
+            <div style={{ marginBottom: "10px" }}>
+              <label style={{ fontSize: "14px", marginBottom: "4px", display: "block" }}>
+                Grid Gap: {gridGap}px
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="50"
+                value={gridGap}
+                onChange={(e) => setGridGap(Number(e.target.value))}
+                style={{ width: "100%" }}
+              />
+            </div>
+            {/* Border & Card Styling */}
+            <div style={{ marginBottom: "10px" }}>
+              <label style={{ fontSize: "14px", marginBottom: "4px", display: "block" }}>
+                Border Radius: {cardBorderRadius}px
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="50"
+                value={cardBorderRadius}
+                onChange={(e) => setCardBorderRadius(Number(e.target.value))}
+                style={{ width: "100%" }}
+              />
+            </div>
+            <div style={{ marginBottom: "10px" }}>
+              <label style={{ fontSize: "14px", marginBottom: "4px", display: "block" }}>
+                Border Width: {cardBorderWidth}px
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="10"
+                value={cardBorderWidth}
+                onChange={(e) => setCardBorderWidth(Number(e.target.value))}
+                style={{ width: "100%" }}
+              />
+            </div>
+            <div style={{ marginBottom: "10px" }}>
+              <label style={{ fontSize: "14px", marginBottom: "4px", display: "block" }}>
+                Border Color:
+              </label>
+              <input
+                type="color"
+                value={cardBorderColor}
+                onChange={(e) => setCardBorderColor(e.target.value)}
+                style={{ width: "100%", height: "30px", padding: "0" }}
+              />
+            </div>
+            {/* Link Text & Content Styling */}
+            <div style={{ marginBottom: "10px" }}>
+              <label style={{ fontSize: "14px", marginBottom: "4px", display: "block" }}>
+                Font Family:
+              </label>
+              <select
+                value={linkFontFamily}
+                onChange={(e) => setLinkFontFamily(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "6px",
+                  fontSize: "14px",
+                  border: "1px solid #ccc",
+                  borderRadius: "4px",
+                }}
+              >
+                <option value="Arial, sans-serif">Arial</option>
+                <option value="'Helvetica Neue', sans-serif">Helvetica Neue</option>
+                <option value="'Times New Roman', serif">Times New Roman</option>
+                <option value="'Courier New', monospace">Courier New</option>
+                <option value="Verdana, sans-serif">Verdana</option>
+              </select>
+            </div>
+            <div style={{ marginBottom: "10px" }}>
+              <label style={{ fontSize: "14px", marginBottom: "4px", display: "block" }}>
+                Font Weight:
+              </label>
+              <select
+                value={linkFontWeight}
+                onChange={(e) => setLinkFontWeight(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "6px",
+                  fontSize: "14px",
+                  border: "1px solid #ccc",
+                  borderRadius: "4px",
+                }}
+              >
+                <option value="100">100</option>
+                <option value="300">300</option>
+                <option value="400">400</option>
+                <option value="600">600</option>
+                <option value="700">700</option>
+              </select>
+            </div>
+            <div style={{ marginBottom: "10px" }}>
+              <label style={{ fontSize: "14px", marginBottom: "4px", display: "block" }}>
+                Font Color:
+              </label>
+              <input
+                type="color"
+                value={linkFontColor}
+                onChange={(e) => setLinkFontColor(e.target.value)}
+                style={{ width: "100%", height: "30px", padding: "0" }}
+              />
+            </div>
+            <div style={{ marginBottom: "10px" }}>
+              <label style={{ fontSize: "14px", marginBottom: "4px", display: "block" }}>
+                Font Size: {linkFontSize}px
+              </label>
+              <input
+                type="range"
+                min="10"
+                max="36"
+                value={linkFontSize}
+                onChange={(e) => setLinkFontSize(Number(e.target.value))}
+                style={{ width: "100%" }}
+              />
+            </div>
+            <div style={{ marginBottom: "10px" }}>
+              <label style={{ fontSize: "14px", marginBottom: "4px", display: "block" }}>
+                Text Position:
+              </label>
+              <select
+                value={linkTextPosition}
+                onChange={(e) => setLinkTextPosition(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "6px",
+                  fontSize: "14px",
+                  border: "1px solid #ccc",
+                  borderRadius: "4px",
+                }}
+              >
+                <option value="top">Top</option>
+                <option value="middle">Middle</option>
+                <option value="bottom">Bottom</option>
+              </select>
+            </div>
+            <div style={{ marginBottom: "10px" }}>
+              <label style={{ fontSize: "14px", marginBottom: "4px", display: "block" }}>
+                Link Background Color:
+              </label>
+              <input
+                type="color"
+                value={linkBackgroundColor}
+                onChange={(e) => setLinkBackgroundColor(e.target.value)}
+                style={{ width: "100%", height: "30px", padding: "0" }}
+              />
+            </div>
+            <div style={{ marginBottom: "10px" }}>
+              <label style={{ fontSize: "14px", marginBottom: "4px", display: "block" }}>
+                Link Padding: {linkPadding}px
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="50"
+                value={linkPadding}
+                onChange={(e) => setLinkPadding(Number(e.target.value))}
+                style={{ width: "100%" }}
+              />
+            </div>
+            {/* Full-Page Background Controls */}
+            <div style={{ marginBottom: "10px" }}>
+              <h4 style={{ fontSize: "16px", fontWeight: "bold", marginBottom: "6px" }}>Background</h4>
+              <div style={{ marginBottom: "10px" }}>
+                <label style={{ fontSize: "14px", marginBottom: "4px", display: "block" }}>
+                  Background Color:
+                </label>
+                <input
+                  type="color"
+                  value={bgColor}
+                  onChange={(e) => setBgColor(e.target.value)}
+                  style={{ width: "100%", height: "30px", padding: "0" }}
+                />
+              </div>
+              <div style={{ marginBottom: "10px" }}>
+                <label style={{ fontSize: "14px", marginBottom: "4px", display: "block" }}>
+                  Background Gradient:
+                </label>
+                <select
+                  value={bgGradient}
+                  onChange={(e) => setBgGradient(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "6px",
+                    fontSize: "14px",
+                    border: "1px solid #ccc",
+                    borderRadius: "4px",
+                  }}
+                >
+                  <option value="">None</option>
+                  <option value="linear-gradient(45deg, #ff6b6b, #f06595)">Sunset</option>
+                  <option value="linear-gradient(45deg, #74c0fc, #4dabf7)">Skyline</option>
+                  <option value="linear-gradient(45deg, #a9e34b, #74c69d)">Mint</option>
+                  <option value="linear-gradient(45deg, #f59f00, #f76707)">Orange Burst</option>
+                  <option value="linear-gradient(45deg, #845ef7, #5c7cfa)">Violet Haze</option>
+                </select>
+              </div>
+              <div style={{ marginBottom: "10px" }}>
+                <label style={{ fontSize: "14px", marginBottom: "4px", display: "block" }}>
+                  Background Image:
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleBgImageUpload}
+                  style={{ width: "100%" }}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: "14px", marginBottom: "4px", display: "block" }}>
+                  Background Video (YouTube link):
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. https://youtu.be/VIDEO_ID"
+                  value={bgVideo}
+                  onChange={(e) => setBgVideo(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "6px",
+                    fontSize: "14px",
+                    border: "1px solid #ccc",
+                    borderRadius: "4px",
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Masonry / Grid Container */}
       <div style={containerStyle} className="w-full">
         {loading && <p style={{ color: "#aaa", textAlign: "center" }}>Loading...</p>}
         {error && <p style={{ color: "red", textAlign: "center" }}>{error}</p>}
         {searchResults.map((item, index) => (
-          <div key={index} style={cardStyle}>
+          <div key={index} style={cardStyle} className="relative break-inside-avoid">
             {item.link && (
               <img
                 src={item.link}
@@ -152,7 +579,7 @@ export default function Results() {
                 style={{ display: "block", width: "100%", height: "auto" }}
               />
             )}
-            <div style={overlayStyle}>
+            <div style={overlayDivStyle} className="relative z-10 flex items-center">
               <div style={{ display: "flex", alignItems: "center" }}>
                 {item.image && item.image.contextLink && (
                   <img
