@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 
-// Use your provided API keys:
+// Your API keys
 const API_KEY = "AIzaSyDlc54LBF2pEDWQiC7JUG7kB5PaFsoytAE";
 const SEARCH_ENGINE_ID = "615b8aae2d40343b8";
 
@@ -53,11 +53,7 @@ export default function Results() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // ----- Edit Modal State (Stub) -----
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalIndex, setModalIndex] = useState(null);
-
-  // ----- Drag-and-Drop State -----
+  // ----- Drag-and-Drop State (basic implementation) -----
   const [draggedItemIndex, setDraggedItemIndex] = useState(null);
   const [dragOverItemIndex, setDragOverItemIndex] = useState(null);
 
@@ -84,9 +80,9 @@ export default function Results() {
       } else if (!data.items || data.items.length === 0) {
         setError("No results found.");
       } else {
-        // Filter: only items with an image and no duplicates (by image link)
+        // Filter out results without an image and remove duplicate image links
         const seen = new Set();
-        const uniqueResults = data.items.filter((item) => {
+        const uniqueResults = data.items.filter(item => {
           if (!item.image || !item.link) return false;
           if (seen.has(item.link)) return false;
           seen.add(item.link);
@@ -110,6 +106,31 @@ export default function Results() {
     }
   };
 
+  // ----- YouTube Background Link Fix -----
+  function parseYouTubeUrl(url) {
+    if (!url) return null;
+    try {
+      if (url.includes("/embed/")) {
+        return url.split("/embed/")[1].split(/[?&]/)[0];
+      }
+      if (url.includes("youtu.be/")) {
+        return url.split("youtu.be/")[1].split(/[?&]/)[0];
+      }
+      if (url.includes("watch?v=")) {
+        return url.split("watch?v=")[1].split(/[?&]/)[0];
+      }
+    } catch {
+      return null;
+    }
+    return null;
+  }
+  function getYouTubeEmbedUrl(rawUrl) {
+    const vid = parseYouTubeUrl(rawUrl);
+    if (!vid) return null;
+    return `https://www.youtube.com/embed/${vid}?autoplay=1&mute=1&loop=1&start=0&end=10&playlist=${vid}`;
+  }
+  const embedUrl = getYouTubeEmbedUrl(bgVideo);
+
   // ----- Dynamic Styles -----
 
   // Full-page background style
@@ -121,7 +142,7 @@ export default function Results() {
     backgroundPosition: "center",
   };
 
-  // For "masonry-vertical", use CSS columns.
+  // Container style: for "masonry-vertical", use CSS columns.
   let containerStyle = {};
   if (gridLayout === "masonry-vertical") {
     containerStyle = {
@@ -146,7 +167,7 @@ export default function Results() {
     };
   }
 
-  // Card style: for masonry-vertical, let image define height
+  // For masonry, let cards use their natural aspect ratio.
   const cardStyleBase = {
     position: "relative",
     overflow: "hidden",
@@ -157,7 +178,6 @@ export default function Results() {
       gridLayout === "simple-grid" || gridLayout === "masonry-horizontal"
         ? `${linkCardWidth}px`
         : "100%",
-    // For masonry, let the image keep its natural aspect ratio.
     breakInside: "avoid",
     WebkitColumnBreakInside: "avoid",
     MozColumnBreakInside: "avoid",
@@ -187,7 +207,7 @@ export default function Results() {
     zIndex: 10,
   };
 
-  // Helper: get favicon URL using Google's service
+  // Helper: get favicon URL
   const getFaviconUrl = (url) => {
     try {
       const { hostname } = new URL(url);
@@ -197,13 +217,16 @@ export default function Results() {
     }
   };
 
-  // ----- Drag-and-Drop Handlers -----
+  // ----- Drag-and-Drop Handlers (basic) -----
   const reorderList = (list, startIndex, endIndex) => {
     const result = [...list];
     const [removed] = result.splice(startIndex, 1);
     result.splice(endIndex, 0, removed);
     return result;
   };
+
+  const [draggedItemIndex, setDraggedItemIndex] = useState(null);
+  const [dragOverItemIndex, setDragOverItemIndex] = useState(null);
 
   const handleDragStart = (index) => {
     setDraggedItemIndex(index);
@@ -230,13 +253,9 @@ export default function Results() {
 
   // ----- Card Actions -----
   const openEditModal = (index) => {
-    setModalIndex(index);
-    setIsModalOpen(true);
-  };
-
-  const closeEditModal = () => {
-    setIsModalOpen(false);
-    setModalIndex(null);
+    // Stub modal for editing
+    // (Details to be added later)
+    console.log("Open edit modal for card", index);
   };
 
   const deleteCard = (index) => {
@@ -244,32 +263,6 @@ export default function Results() {
     updated.splice(index, 1);
     setSearchResults(updated);
   };
-
-  // ----- YouTube Background Fix -----
-  // Parse a YouTube URL from various formats and build a proper embed URL.
-  function parseYouTubeUrl(url) {
-    if (!url) return null;
-    try {
-      if (url.includes("/embed/")) {
-        return url.split("/embed/")[1].split(/[?&]/)[0];
-      }
-      if (url.includes("youtu.be/")) {
-        return url.split("youtu.be/")[1].split(/[?&]/)[0];
-      }
-      if (url.includes("watch?v=")) {
-        return url.split("watch?v=")[1].split(/[?&]/)[0];
-      }
-    } catch {
-      return null;
-    }
-    return null;
-  }
-  function getYouTubeEmbedUrl(rawUrl) {
-    const vid = parseYouTubeUrl(rawUrl);
-    if (!vid) return null;
-    return `https://www.youtube.com/embed/${vid}?autoplay=1&mute=1&loop=1&start=0&end=10&playlist=${vid}`;
-  }
-  const embedUrl = getYouTubeEmbedUrl(bgVideo);
 
   return (
     <div style={backgroundStyle} className="min-h-screen relative">
@@ -306,7 +299,7 @@ export default function Results() {
           />
         </div>
 
-        {/* Control Panel Toggle (remains at top-right) */}
+        {/* Control Panel Toggle at Top-Right */}
         <div className="absolute top-4 right-4 z-50">
           <button
             onClick={() => setPanelOpen(!panelOpen)}
@@ -350,9 +343,7 @@ export default function Results() {
                       min="100"
                       max="500"
                       value={linkCardWidth}
-                      onChange={(e) =>
-                        setLinkCardWidth(Number(e.target.value))
-                      }
+                      onChange={(e) => setLinkCardWidth(Number(e.target.value))}
                       className="w-full mb-2"
                     />
                   </>
@@ -370,7 +361,7 @@ export default function Results() {
                 />
               </div>
 
-              {/* Border & Card Styling */}
+              {/* Border & Card Styling (default is no border) */}
               <div className="mb-4">
                 <label className="block text-sm mb-1">
                   Border Radius: {cardBorderRadius}px
@@ -546,8 +537,7 @@ export default function Results() {
           )}
         </div>
 
-        {/* (The "Search Results" header has been removed as requested) */}
-
+        {/* Loading / Error Messages */}
         {loading && <p className="text-gray-400">Loading results...</p>}
         {error && <p className="text-red-500">{error}</p>}
 
@@ -565,7 +555,6 @@ export default function Results() {
                 onDrop={() => handleDrop(index)}
                 onDragEnd={handleDragEnd}
               >
-                {/* Display image preserving its natural aspect ratio */}
                 {result.link && (
                   <img
                     src={result.link}
@@ -573,7 +562,6 @@ export default function Results() {
                     style={{ display: "block", width: "100%", height: "auto" }}
                   />
                 )}
-                {/* Overlay with text and action icons */}
                 <div style={overlayStyle} className="relative z-10 flex items-center">
                   <div className="flex items-center">
                     {result.image && result.image.contextLink && (
@@ -588,7 +576,7 @@ export default function Results() {
                   <div className="flex items-center space-x-2">
                     {/* Edit Icon */}
                     <button
-                      onClick={() => openEditModal(index)}
+                      onClick={() => console.log("Edit card", index)}
                       className="bg-transparent border-none cursor-pointer"
                     >
                       <svg
@@ -602,7 +590,9 @@ export default function Results() {
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
-                          d="M16.862 2.487a2.25 2.25 0 113.182 3.182L7.136 18.578a4.5 4.5 0 01-1.892 1.131l-2.835.945.945-2.835a4.5 4.5 0 011.131-1.892l12.377-12.44z"
+                          d="M16.862 2.487a2.25 2.25 0 113.182 3.182L7.136 
+                          18.578a4.5 4.5 0 01-1.892 1.131l-2.835.945.945-2.835a4.5 
+                          4.5 0 011.131-1.892l12.377-12.44z"
                         />
                       </svg>
                     </button>
@@ -622,7 +612,7 @@ export default function Results() {
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
-                          d="M9.75 9.75l.45 8.25m4.5-8.25l-.45 8.25M6.75 5.25h10.5m-9 0v-.75a2.25 2.25 0 012.25-2.25h3a2.25 2.25 0 012.25 2.25v.75m-9 0h9"
+                          d="M9.75 9.75l.45 8.25m4.5-8.25l-.45 8.25M6.75 5.25h10.5"
                         />
                       </svg>
                     </button>
@@ -663,25 +653,6 @@ export default function Results() {
           Back to Search
         </button>
       </div>
-
-      {/* Stub Edit Modal */}
-      {isModalOpen && modalIndex !== null && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white text-black p-6 rounded shadow-lg w-96 relative">
-            <h2 className="text-xl font-bold mb-4">Edit Link Card (Stub)</h2>
-            <p className="mb-4">
-              This is a placeholder for editing the link card. Add your edit
-              controls here.
-            </p>
-            <button
-              onClick={closeEditModal}
-              className="px-4 py-2 bg-gray-600 text-white rounded"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
