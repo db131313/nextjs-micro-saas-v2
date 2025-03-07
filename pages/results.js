@@ -9,12 +9,12 @@ export default function Results() {
   const router = useRouter();
   const { query } = router.query;
 
-  // Search state
+  // --- Search State ---
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Mobile detection (viewport width under 700px)
+  // --- Mobile Detection ---
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 700);
@@ -23,13 +23,13 @@ export default function Results() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // --- STYLE CONTROL PANEL STATES ---
+  // --- Style Control Panel States ---
   // Grid Layout: "masonry-vertical", "simple-grid", "masonry-horizontal"
   const [gridLayout, setGridLayout] = useState("masonry-vertical");
-  // For simple grid/horizontal layouts
+  // For non‑vertical layouts
   const [linkCardWidth, setLinkCardWidth] = useState(250);
   const [gridGap, setGridGap] = useState(10);
-  // Default theme: no border style
+  // Default theme: no border and no border radius
   const [cardBorderRadius, setCardBorderRadius] = useState(0);
   const [cardBorderWidth, setCardBorderWidth] = useState(0);
   const [cardBorderColor, setCardBorderColor] = useState("#d1d5db");
@@ -49,10 +49,10 @@ export default function Results() {
   const [bgImage, setBgImage] = useState(null);
   const [bgVideo, setBgVideo] = useState("");
 
-  // Control Panel toggle
+  // Toggle for style control panel dropdown
   const [panelOpen, setPanelOpen] = useState(false);
 
-  // --- FETCH SEARCH RESULTS ---
+  // --- Fetch Search Results ---
   useEffect(() => {
     if (query) {
       fetchSearchResults(query);
@@ -72,7 +72,7 @@ export default function Results() {
       } else if (!data.items || data.items.length === 0) {
         setError("No results found.");
       } else {
-        // Filter: only include items with an image & remove duplicates
+        // Filter: Only include items with an image & remove duplicate image links
         const seen = new Set();
         const uniqueResults = data.items.filter((item) => {
           if (!item.image || !item.link) return false;
@@ -89,16 +89,15 @@ export default function Results() {
     setLoading(false);
   };
 
-  // --- BACKGROUND IMAGE UPLOAD ---
+  // --- Background Image Upload Handler ---
   const handleBgImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      const url = URL.createObjectURL(file);
-      setBgImage(url);
+      setBgImage(URL.createObjectURL(file));
     }
   };
 
-  // --- YOUTUBE BACKGROUND EMBED ---
+  // --- YouTube Background Embed ---
   function parseYouTubeUrl(url) {
     if (!url) return null;
     try {
@@ -123,61 +122,61 @@ export default function Results() {
   }
   const embedUrl = getYouTubeEmbedUrl(bgVideo);
 
-  // --- DYNAMIC STYLES ---
+  // --- Dynamic Styles ---
 
   // Full-page background style
   const backgroundStyle = {
     backgroundColor: bgColor,
-    backgroundImage: bgGradient ? bgGradient : bgImage ? `url(${bgImage})` : "none",
+    backgroundImage: bgGradient
+      ? bgGradient
+      : bgImage
+      ? `url(${bgImage})`
+      : "none",
     backgroundSize: bgImage ? "cover" : "auto",
     backgroundRepeat: "no-repeat",
     backgroundPosition: "center",
     minHeight: "100vh",
-    paddingTop: "70px", // leave room for the top-left search input
+    paddingTop: "70px", // leave room for top-left search input
   };
 
-  // Container style for masonry layout
-  let containerStyle = {};
-  if (gridLayout === "masonry-vertical") {
-    containerStyle = {
-      columnCount: isMobile ? 1 : 3,
-      columnGap: `${gridGap}px`,
-      width: "100%",
-    };
-  } else if (gridLayout === "simple-grid") {
-    containerStyle = {
-      display: "grid",
-      gridTemplateColumns: `repeat(auto-fill, minmax(${linkCardWidth}px, 1fr))`,
-      gap: `${gridGap}px`,
-      width: "100%",
-    };
-  } else if (gridLayout === "masonry-horizontal") {
-    containerStyle = {
-      display: "flex",
-      flexWrap: "nowrap",
-      overflowX: "auto",
-      gap: `${gridGap}px`,
-      width: "100%",
-    };
-  }
+  // Container style for masonry-vertical layout using CSS columns.
+  // On mobile, force one column; otherwise, three columns.
+  const containerStyle =
+    gridLayout === "masonry-vertical"
+      ? { columnCount: isMobile ? 1 : 3, columnGap: `${gridGap}px`, width: "100%" }
+      : gridLayout === "simple-grid"
+      ? {
+          display: "grid",
+          gridTemplateColumns: `repeat(auto-fill, minmax(${linkCardWidth}px, 1fr))`,
+          gap: `${gridGap}px`,
+          width: "100%",
+        }
+      : {
+          display: "flex",
+          flexWrap: "nowrap",
+          overflowX: "auto",
+          gap: `${gridGap}px`,
+          width: "100%",
+        };
 
-  // Default card style (for masonry, let images keep their natural aspect ratio)
+  // Default card style: for masonry, let images retain natural aspect ratio.
   const cardStyle = {
     position: "relative",
     overflow: "hidden",
     borderRadius: `${cardBorderRadius}px`,
     border: `${cardBorderWidth}px solid ${cardBorderColor}`,
     marginBottom: gridLayout === "masonry-vertical" ? `${gridGap}px` : undefined,
-    width: (gridLayout === "simple-grid" || gridLayout === "masonry-horizontal")
-      ? `${linkCardWidth}px`
-      : "100%",
+    width:
+      gridLayout === "simple-grid" || gridLayout === "masonry-horizontal"
+        ? `${linkCardWidth}px`
+        : "100%",
     breakInside: "avoid",
     WebkitColumnBreakInside: "avoid",
     MozColumnBreakInside: "avoid",
     cursor: "default",
   };
 
-  // Overlay style for link text and (if needed) icons
+  // Overlay style for link text (and later action icons if desired)
   const overlayDivStyle = {
     position: "absolute",
     left: 0,
@@ -200,7 +199,7 @@ export default function Results() {
     zIndex: 10,
   };
 
-  // Helper: get favicon URL via Google's service
+  // Helper: get favicon using Google's service
   const getFaviconUrl = (url) => {
     try {
       const { hostname } = new URL(url);
@@ -227,7 +226,7 @@ export default function Results() {
         </div>
       )}
 
-      {/* Search input in top-left */}
+      {/* Search Input in Top-Left */}
       <div style={{ position: "absolute", top: "10px", left: "10px", zIndex: 50 }}>
         <input
           type="text"
@@ -249,7 +248,7 @@ export default function Results() {
         />
       </div>
 
-      {/* Style Control Panel Toggle (gear icon) at top-right */}
+      {/* Style Control Panel Dropdown Toggle (Gear Icon) at Top-Right */}
       <div style={{ position: "absolute", top: "10px", right: "10px", zIndex: 50 }}>
         <button
           onClick={() => setPanelOpen(!panelOpen)}
