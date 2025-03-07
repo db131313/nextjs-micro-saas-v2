@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/router';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/router";
 
 // Your API keys
 const API_KEY = "AIzaSyDlc54LBF2pEDWQiC7JUG7kB5PaFsoytAE";
@@ -9,65 +9,28 @@ export default function Results() {
   const router = useRouter();
   const { query } = router.query;
 
-  // ----- Search State -----
+  // Search state
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // ----- Grid & Card Controls -----
-  // Default to "masonry-vertical" layout.
-  const [gridLayout, setGridLayout] = useState("masonry-vertical");
-  const [linkCardWidth, setLinkCardWidth] = useState(250); // used for simple-grid/horizontal
-  const [gridGap, setGridGap] = useState(10);
-  // Default theme: no border and no border radius.
-  const [cardBorderRadius, setCardBorderRadius] = useState(0);
-  const [cardBorderWidth, setCardBorderWidth] = useState(0);
-  const [cardBorderColor, setCardBorderColor] = useState("#d1d5db");
-
-  // ----- Link Text & Content Styling Controls -----
-  const [linkFontFamily, setLinkFontFamily] = useState("Arial, sans-serif");
-  const [linkFontWeight, setLinkFontWeight] = useState("400");
-  const [linkFontColor, setLinkFontColor] = useState("#ffffff");
-  const [linkFontSize, setLinkFontSize] = useState(14);
-  const [linkTextPosition, setLinkTextPosition] = useState("bottom");
-  const [linkBackgroundColor, setLinkBackgroundColor] = useState("rgba(0,0,0,0.4)");
-  const [linkPadding, setLinkPadding] = useState(10);
-
-  // ----- Full-Page Background Controls -----
-  const [bgColor, setBgColor] = useState("#111111");
-  const [bgGradient, setBgGradient] = useState("");
-  const [bgImage, setBgImage] = useState(null);
-  const [bgVideo, setBgVideo] = useState("");
-
-  // ----- Control Panel Toggle -----
-  const [panelOpen, setPanelOpen] = useState(false);
-
-  // ----- Mobile View Check -----
+  // Mobile detection (viewport width < 700px)
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 700);
-    };
+    const checkMobile = () => setIsMobile(window.innerWidth < 700);
     checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // ----- Drag-and-Drop State (basic implementation) -----
-  const [draggedItemIndex, setDraggedItemIndex] = useState(null);
-  const [dragOverItemIndex, setDragOverItemIndex] = useState(null);
-
-  // Background video ref
-  const videoRef = useRef(null);
-
-  // ----- Fetch Search Results -----
+  // Fetch search results when query changes
   useEffect(() => {
     if (query) {
-      fetchGoogleImages(query);
+      fetchSearchResults(query);
     }
   }, [query]);
 
-  const fetchGoogleImages = async (keyword) => {
+  const fetchSearchResults = async (keyword) => {
     setLoading(true);
     setError(null);
     try {
@@ -80,9 +43,9 @@ export default function Results() {
       } else if (!data.items || data.items.length === 0) {
         setError("No results found.");
       } else {
-        // Filter out results without an image and remove duplicate image links
+        // Filter out items without an image and remove duplicate image links
         const seen = new Set();
-        const uniqueResults = data.items.filter(item => {
+        const uniqueResults = data.items.filter((item) => {
           if (!item.image || !item.link) return false;
           if (seen.has(item.link)) return false;
           seen.add(item.link);
@@ -90,568 +53,129 @@ export default function Results() {
         });
         setSearchResults(uniqueResults);
       }
-    } catch (error) {
+    } catch (err) {
       setError("Failed to fetch results. Try again later.");
-      console.error("Error fetching images:", error);
+      console.error(err);
     }
     setLoading(false);
   };
 
-  // ----- Background Image Upload Handler -----
-  const handleBgImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const imgUrl = URL.createObjectURL(file);
-      setBgImage(imgUrl);
-    }
-  };
-
-  // ----- YouTube Background Link Fix -----
-  function parseYouTubeUrl(url) {
-    if (!url) return null;
-    try {
-      if (url.includes("/embed/")) {
-        return url.split("/embed/")[1].split(/[?&]/)[0];
-      }
-      if (url.includes("youtu.be/")) {
-        return url.split("youtu.be/")[1].split(/[?&]/)[0];
-      }
-      if (url.includes("watch?v=")) {
-        return url.split("watch?v=")[1].split(/[?&]/)[0];
-      }
-    } catch {
-      return null;
-    }
-    return null;
-  }
-  function getYouTubeEmbedUrl(rawUrl) {
-    const vid = parseYouTubeUrl(rawUrl);
-    if (!vid) return null;
-    return `https://www.youtube.com/embed/${vid}?autoplay=1&mute=1&loop=1&start=0&end=10&playlist=${vid}`;
-  }
-  const embedUrl = getYouTubeEmbedUrl(bgVideo);
-
-  // ----- Dynamic Styles -----
-
-  // Full-page background style
+  // Full-page background style (simple dark background)
   const backgroundStyle = {
-    backgroundColor: bgColor,
-    backgroundImage: bgGradient ? bgGradient : bgImage ? `url(${bgImage})` : "none",
-    backgroundSize: bgImage ? "cover" : "auto",
-    backgroundRepeat: "no-repeat",
-    backgroundPosition: "center",
+    backgroundColor: "#111111",
+    minHeight: "100vh",
+    paddingTop: "70px", // leave room for the top-left search input
   };
 
-  // Container style: for "masonry-vertical", use CSS columns.
-  let containerStyle = {};
-  if (gridLayout === "masonry-vertical") {
-    containerStyle = {
-      columnCount: isMobile ? 1 : 3,
-      columnGap: `${gridGap}px`,
-      width: "100%",
-    };
-  } else if (gridLayout === "simple-grid") {
-    containerStyle = {
-      display: "grid",
-      gridTemplateColumns: `repeat(auto-fill, minmax(${linkCardWidth}px, 1fr))`,
-      gap: `${gridGap}px`,
-      width: "100%",
-    };
-  } else if (gridLayout === "masonry-horizontal") {
-    containerStyle = {
-      display: "flex",
-      flexWrap: "nowrap",
-      overflowX: "auto",
-      gap: `${gridGap}px`,
-      width: "100%",
-    };
-  }
+  // Container style for masonry vertical layout using CSS columns.
+  // On mobile, force one column; otherwise, use three columns.
+  const containerStyle = isMobile
+    ? { columnCount: 1, columnGap: "10px", width: "100%" }
+    : { columnCount: 3, columnGap: "10px", width: "100%" };
 
-  // For masonry, let cards use their natural aspect ratio.
-  const cardStyleBase = {
+  // Default card style: no border and no border radius.
+  const cardStyle = {
     position: "relative",
     overflow: "hidden",
-    borderRadius: `${cardBorderRadius}px`,
-    border: `${cardBorderWidth}px solid ${cardBorderColor}`,
-    marginBottom: gridLayout === "masonry-vertical" ? `${gridGap}px` : undefined,
-    width:
-      gridLayout === "simple-grid" || gridLayout === "masonry-horizontal"
-        ? `${linkCardWidth}px`
-        : "100%",
+    borderRadius: "0px",
+    border: "0px solid transparent",
+    marginBottom: "10px",
+    width: "100%",
+    // Ensure cards don't break across columns
     breakInside: "avoid",
     WebkitColumnBreakInside: "avoid",
     MozColumnBreakInside: "avoid",
-    cursor: "move",
   };
 
-  // Overlay for link text and icons
+  // Overlay style for link text and favicon
   const overlayStyle = {
     position: "absolute",
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: linkBackgroundColor,
-    padding: `${linkPadding}px`,
-    fontFamily: linkFontFamily,
-    fontWeight: linkFontWeight,
-    color: linkFontColor,
-    fontSize: `${linkFontSize}px`,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    padding: "5px",
+    fontFamily: "Arial, sans-serif",
+    fontWeight: "400",
+    color: "#ffffff",
+    fontSize: "14px",
     display: "flex",
-    alignItems:
-      linkTextPosition === "top"
-        ? "flex-start"
-        : linkTextPosition === "middle"
-        ? "center"
-        : "flex-end",
+    alignItems: "center",
     justifyContent: "space-between",
     zIndex: 10,
   };
 
-  // Helper: get favicon URL
+  // Helper to get favicon using Google's service
   const getFaviconUrl = (url) => {
     try {
       const { hostname } = new URL(url);
       return `https://www.google.com/s2/favicons?domain=${hostname}`;
-    } catch {
+    } catch (e) {
       return "";
     }
   };
 
-  // ----- Drag-and-Drop Handlers (basic) -----
-  const reorderList = (list, startIndex, endIndex) => {
-    const result = [...list];
-    const [removed] = result.splice(startIndex, 1);
-    result.splice(endIndex, 0, removed);
-    return result;
-  };
-
-  const [draggedItemIndex, setDraggedItemIndex] = useState(null);
-  const [dragOverItemIndex, setDragOverItemIndex] = useState(null);
-
-  const handleDragStart = (index) => {
-    setDraggedItemIndex(index);
-  };
-
-  const handleDragOver = (index, e) => {
-    e.preventDefault();
-    setDragOverItemIndex(index);
-  };
-
-  const handleDrop = (index) => {
-    if (draggedItemIndex !== null && dragOverItemIndex !== null) {
-      const newResults = reorderList(searchResults, draggedItemIndex, dragOverItemIndex);
-      setSearchResults(newResults);
-    }
-    setDraggedItemIndex(null);
-    setDragOverItemIndex(null);
-  };
-
-  const handleDragEnd = () => {
-    setDraggedItemIndex(null);
-    setDragOverItemIndex(null);
-  };
-
-  // ----- Card Actions -----
-  const openEditModal = (index) => {
-    // Stub modal for editing
-    // (Details to be added later)
-    console.log("Open edit modal for card", index);
-  };
-
-  const deleteCard = (index) => {
-    const updated = [...searchResults];
-    updated.splice(index, 1);
-    setSearchResults(updated);
-  };
-
   return (
-    <div style={backgroundStyle} className="min-h-screen relative">
-      {/* Optional Background Video */}
-      {embedUrl && (
-        <div className="absolute inset-0 z-[-1]">
-          <iframe
-            ref={videoRef}
-            width="100%"
-            height="100%"
-            src={embedUrl}
-            frameBorder="0"
-            allow="autoplay; encrypted-media"
-            allowFullScreen
-            className="w-full h-full object-cover"
-          ></iframe>
-        </div>
-      )}
+    <div style={backgroundStyle}>
+      {/* Search input in top-left */}
+      <div style={{ position: "absolute", top: "10px", left: "10px", zIndex: 50 }}>
+        <input
+          type="text"
+          defaultValue={query || ""}
+          placeholder="Search..."
+          onKeyPress={(e) => {
+            if (e.key === "Enter") {
+              router.push(`/results?query=${encodeURIComponent(e.target.value)}`);
+            }
+          }}
+          style={{
+            height: "50px",
+            minWidth: "200px",
+            padding: "10px",
+            fontSize: "16px",
+            border: "1px solid #ccc",
+            borderRadius: "4px",
+          }}
+        />
+      </div>
 
-      <div className="relative z-10 flex flex-col text-white p-6">
-        {/* Search Input at Top-Left */}
-        <div className="absolute top-4 left-4 z-50">
-          <input
-            type="text"
-            placeholder="Search..."
-            defaultValue={query || ""}
-            onKeyPress={(e) => {
-              if (e.key === "Enter") {
-                router.push(`/results?query=${encodeURIComponent(e.target.value)}`);
-              }
-            }}
-            className="px-4 py-2 border border-gray-300 rounded text-black"
-            style={{ height: "50px", minWidth: "200px" }}
-          />
-        </div>
-
-        {/* Control Panel Toggle at Top-Right */}
-        <div className="absolute top-4 right-4 z-50">
-          <button
-            onClick={() => setPanelOpen(!panelOpen)}
-            className="p-2 bg-white text-black rounded-full shadow border border-gray-300"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth="2"
-              stroke="currentColor"
-              className="w-6 h-6"
-            >
-              <circle cx="12" cy="12" r="3" />
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l0 0a1.65 1.65 0 0 1-2.33 2.33l0 0a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 1-2.11 0 1.65 1.65 0 0 0-1.82.33l0 0a1.65 1.65 0 0 1-2.33-2.33l0 0a1.65 1.65 0 0 0-.33-1.82 1.65 1.65 0 0 1 0-2.11 1.65 1.65 0 0 0 .33-1.82l0 0a1.65 1.65 0 0 1 2.33-2.33l0 0a1.65 1.65 0 0 0 1.82.33 1.65 1.65 0 0 1 2.11 0 1.65 1.65 0 0 0 1.82-.33l0 0a1.65 1.65 0 0 1 2.33 2.33l0 0a1.65 1.65 0 0 0 .33 1.82 1.65 1.65 0 0 1 0 2.11z" />
-            </svg>
-          </button>
-          {panelOpen && (
-            <div className="mt-2 bg-white text-black p-4 rounded shadow border border-gray-300 max-h-[90vh] overflow-y-auto w-80">
-              <h3 className="text-lg font-bold mb-2">Customize View</h3>
-
-              {/* Grid Layout & Dimensions */}
-              <div className="mb-4">
-                <label className="block text-sm mb-1">Grid Layout:</label>
-                <select
-                  value={gridLayout}
-                  onChange={(e) => setGridLayout(e.target.value)}
-                  className="w-full p-2 border rounded text-black mb-2"
-                >
-                  <option value="masonry-vertical">Masonry Vertical</option>
-                  <option value="simple-grid">Simple Grid</option>
-                  <option value="masonry-horizontal">Masonry Horizontal</option>
-                </select>
-                {gridLayout !== "masonry-vertical" && (
-                  <>
-                    <label className="block text-sm mb-1">
-                      Link Card Width: {linkCardWidth}px
-                    </label>
-                    <input
-                      type="range"
-                      min="100"
-                      max="500"
-                      value={linkCardWidth}
-                      onChange={(e) => setLinkCardWidth(Number(e.target.value))}
-                      className="w-full mb-2"
-                    />
-                  </>
-                )}
-                <label className="block text-sm mb-1">
-                  Grid Gap: {gridGap}px
-                </label>
-                <input
-                  type="range"
-                  min="0"
-                  max="50"
-                  value={gridGap}
-                  onChange={(e) => setGridGap(Number(e.target.value))}
-                  className="w-full mb-2"
-                />
-              </div>
-
-              {/* Border & Card Styling (default is no border) */}
-              <div className="mb-4">
-                <label className="block text-sm mb-1">
-                  Border Radius: {cardBorderRadius}px
-                </label>
-                <input
-                  type="range"
-                  min="0"
-                  max="50"
-                  value={cardBorderRadius}
-                  onChange={(e) =>
-                    setCardBorderRadius(Number(e.target.value))
-                  }
-                  className="w-full mb-2"
-                />
-                <label className="block text-sm mb-1">
-                  Border Width: {cardBorderWidth}px
-                </label>
-                <input
-                  type="range"
-                  min="0"
-                  max="10"
-                  value={cardBorderWidth}
-                  onChange={(e) =>
-                    setCardBorderWidth(Number(e.target.value))
-                  }
-                  className="w-full mb-2"
-                />
-                <label className="block text-sm mb-1">Border Color:</label>
-                <input
-                  type="color"
-                  value={cardBorderColor}
-                  onChange={(e) => setCardBorderColor(e.target.value)}
-                  className="w-full mb-2 h-8 p-0"
-                />
-              </div>
-
-              {/* Link Text & Content Styling */}
-              <div className="mb-4">
-                <label className="block text-sm mb-1">Font Family:</label>
-                <select
-                  value={linkFontFamily}
-                  onChange={(e) => setLinkFontFamily(e.target.value)}
-                  className="w-full p-2 border rounded text-black mb-2"
-                >
-                  <option value="Arial, sans-serif">Arial</option>
-                  <option value="'Helvetica Neue', sans-serif">
-                    Helvetica Neue
-                  </option>
-                  <option value="'Times New Roman', serif">
-                    Times New Roman
-                  </option>
-                  <option value="'Courier New', monospace">
-                    Courier New
-                  </option>
-                  <option value="Verdana, sans-serif">Verdana</option>
-                </select>
-                <label className="block text-sm mb-1">Font Weight:</label>
-                <select
-                  value={linkFontWeight}
-                  onChange={(e) => setLinkFontWeight(e.target.value)}
-                  className="w-full p-2 border rounded text-black mb-2"
-                >
-                  <option value="100">100</option>
-                  <option value="300">300</option>
-                  <option value="400">400</option>
-                  <option value="600">600</option>
-                  <option value="700">700</option>
-                </select>
-                <label className="block text-sm mb-1">Font Color:</label>
-                <input
-                  type="color"
-                  value={linkFontColor}
-                  onChange={(e) => setLinkFontColor(e.target.value)}
-                  className="w-full mb-2 h-8 p-0"
-                />
-                <label className="block text-sm mb-1">
-                  Font Size: {linkFontSize}px
-                </label>
-                <input
-                  type="range"
-                  min="10"
-                  max="36"
-                  value={linkFontSize}
-                  onChange={(e) => setLinkFontSize(Number(e.target.value))}
-                  className="w-full mb-2"
-                />
-                <label className="block text-sm mb-1">Text Position:</label>
-                <select
-                  value={linkTextPosition}
-                  onChange={(e) => setLinkTextPosition(e.target.value)}
-                  className="w-full p-2 border rounded text-black mb-2"
-                >
-                  <option value="top">Top</option>
-                  <option value="middle">Middle</option>
-                  <option value="bottom">Bottom</option>
-                </select>
-                <label className="block text-sm mb-1">
-                  Link Background Color:
-                </label>
-                <input
-                  type="color"
-                  value={linkBackgroundColor}
-                  onChange={(e) => setLinkBackgroundColor(e.target.value)}
-                  className="w-full mb-2 h-8 p-0"
-                />
-                <label className="block text-sm mb-1">
-                  Link Padding: {linkPadding}px
-                </label>
-                <input
-                  type="range"
-                  min="0"
-                  max="50"
-                  value={linkPadding}
-                  onChange={(e) => setLinkPadding(Number(e.target.value))}
-                  className="w-full mb-2"
-                />
-              </div>
-
-              {/* Full Page Background Controls */}
-              <div className="mb-4">
-                <h4 className="text-md font-bold mb-1">Background</h4>
-                <label className="block text-sm mb-1">Background Color:</label>
-                <input
-                  type="color"
-                  value={bgColor}
-                  onChange={(e) => setBgColor(e.target.value)}
-                  className="w-full mb-2 h-8 p-0"
-                />
-                <label className="block text-sm mb-1">
-                  Background Gradient:
-                </label>
-                <select
-                  value={bgGradient}
-                  onChange={(e) => setBgGradient(e.target.value)}
-                  className="w-full p-2 border rounded text-black mb-2"
-                >
-                  <option value="">None</option>
-                  <option value="linear-gradient(45deg, #ff6b6b, #f06595)">
-                    Sunset
-                  </option>
-                  <option value="linear-gradient(45deg, #74c0fc, #4dabf7)">
-                    Skyline
-                  </option>
-                  <option value="linear-gradient(45deg, #a9e34b, #74c69d)">
-                    Mint
-                  </option>
-                  <option value="linear-gradient(45deg, #f59f00, #f76707)">
-                    Orange Burst
-                  </option>
-                  <option value="linear-gradient(45deg, #845ef7, #5c7cfa)">
-                    Violet Haze
-                  </option>
-                </select>
-                <label className="block text-sm mb-1">Background Image:</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleBgImageUpload}
-                  className="w-full mb-2"
-                />
-                <label className="block text-sm mb-1">
-                  Background Video (YouTube link):
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. https://youtu.be/VIDEO_ID"
-                  value={bgVideo}
-                  onChange={(e) => setBgVideo(e.target.value)}
-                  className="w-full p-2 border rounded text-black mb-2"
-                />
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Loading / Error Messages */}
-        {loading && <p className="text-gray-400">Loading results...</p>}
-        {error && <p className="text-red-500">{error}</p>}
-
-        {/* Masonry / Grid Container */}
-        <div style={containerStyle} className="w-full">
-          {searchResults.length > 0 ? (
-            searchResults.map((result, index) => (
-              <div
-                key={index}
-                style={cardStyleBase}
-                className="mb-4 relative break-inside-avoid"
-                draggable
-                onDragStart={() => handleDragStart(index)}
-                onDragOver={(e) => handleDragOver(index, e)}
-                onDrop={() => handleDrop(index)}
-                onDragEnd={handleDragEnd}
-              >
-                {result.link && (
+      {/* Results container */}
+      <div style={containerStyle} className="w-full">
+        {loading && <p style={{ color: "#aaa", textAlign: "center" }}>Loading...</p>}
+        {error && <p style={{ color: "red", textAlign: "center" }}>{error}</p>}
+        {searchResults.map((item, index) => (
+          <div key={index} style={cardStyle}>
+            {item.link && (
+              <img
+                src={item.link}
+                alt={item.title}
+                style={{ display: "block", width: "100%", height: "auto" }}
+              />
+            )}
+            <div style={overlayStyle}>
+              <div style={{ display: "flex", alignItems: "center" }}>
+                {item.image && item.image.contextLink && (
                   <img
-                    src={result.link}
-                    alt={result.title}
-                    style={{ display: "block", width: "100%", height: "auto" }}
+                    src={getFaviconUrl(item.image.contextLink)}
+                    alt="favicon"
+                    style={{ width: "16px", height: "16px", marginRight: "4px" }}
                   />
                 )}
-                <div style={overlayStyle} className="relative z-10 flex items-center">
-                  <div className="flex items-center">
-                    {result.image && result.image.contextLink && (
-                      <img
-                        src={getFaviconUrl(result.image.contextLink)}
-                        alt="favicon"
-                        style={{ width: "16px", height: "16px", marginRight: "4px" }}
-                      />
-                    )}
-                    <p className="text-sm m-0 line-clamp-2">{result.title}</p>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    {/* Edit Icon */}
-                    <button
-                      onClick={() => console.log("Edit card", index)}
-                      className="bg-transparent border-none cursor-pointer"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth="2"
-                        stroke="currentColor"
-                        className="w-5 h-5"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M16.862 2.487a2.25 2.25 0 113.182 3.182L7.136 
-                          18.578a4.5 4.5 0 01-1.892 1.131l-2.835.945.945-2.835a4.5 
-                          4.5 0 011.131-1.892l12.377-12.44z"
-                        />
-                      </svg>
-                    </button>
-                    {/* Delete Icon */}
-                    <button
-                      onClick={() => deleteCard(index)}
-                      className="bg-transparent border-none cursor-pointer"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth="2"
-                        stroke="currentColor"
-                        className="w-5 h-5 text-red-500"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M9.75 9.75l.45 8.25m4.5-8.25l-.45 8.25M6.75 5.25h10.5"
-                        />
-                      </svg>
-                    </button>
-                    {/* Move Icon */}
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth="2"
-                      stroke="currentColor"
-                      className="w-5 h-5 cursor-move"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M9 4.5V3.75a.75.75 0 111.5 0v.75h3V3.75a.75.75 0 111.5 0v.75h1.75a2.25 2.25 0 012.25 2.25v12a2.25 2.25 0 01-2.25 2.25H7.25a2.25 2.25 0 01-2.25-2.25v-12a2.25 2.25 0 012.25-2.25H9z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M9 8.25h6m-6 3h6m-6 3h6"
-                      />
-                    </svg>
-                  </div>
-                </div>
+                <span
+                  style={{
+                    display: "-webkit-box",
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {item.title}
+                </span>
               </div>
-            ))
-          ) : (
-            !loading && <p>No results found.</p>
-          )}
-        </div>
-
-        {/* Back to Search Button */}
-        <button
-          onClick={() => router.push("/")}
-          className="mt-6 px-4 py-2 bg-blue-600 text-white font-bold rounded-lg"
-        >
-          Back to Search
-        </button>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
