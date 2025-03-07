@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 
-// Your API keys (use the ones from our previous chats)
+// Your API keys (from previous conversations)
 const API_KEY = "AIzaSyDlc54LBF2pEDWQiC7JUG7kB5PaFsoytAE";
 const SEARCH_ENGINE_ID = "615b8aae2d40343b8";
 
@@ -9,12 +9,12 @@ export default function Results() {
   const router = useRouter();
   const { query } = router.query;
 
-  // ----- Search State -----
+  // --- Search State ---
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // ----- Mobile Detection (viewport < 700px) -----
+  // --- Mobile Detection (viewport < 700px) ---
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 700);
@@ -23,14 +23,14 @@ export default function Results() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // ----- Style Control Panel States -----
+  // --- Style Control Panel States ---
   // Grid layout: "masonry-vertical", "simple-grid", "masonry-horizontal"
   const [gridLayout, setGridLayout] = useState("masonry-vertical");
-  // For layouts that use fixed dimensions:
+  // For non‑vertical layouts:
   const [linkCardWidth, setLinkCardWidth] = useState(250);
   const [linkCardHeight, setLinkCardHeight] = useState(250);
   const [gridGap, setGridGap] = useState(10);
-  // Default theme: no border style (0 border width and border radius)
+  // Default theme: no border and no border radius
   const [cardBorderRadius, setCardBorderRadius] = useState(0);
   const [cardBorderWidth, setCardBorderWidth] = useState(0);
   const [cardBorderColor, setCardBorderColor] = useState("#d1d5db");
@@ -40,7 +40,7 @@ export default function Results() {
   const [linkFontWeight, setLinkFontWeight] = useState("400");
   const [linkFontColor, setLinkFontColor] = useState("#ffffff");
   const [linkFontSize, setLinkFontSize] = useState(14);
-  const [linkTextPosition, setLinkTextPosition] = useState("bottom"); // top, middle, or bottom
+  const [linkTextPosition, setLinkTextPosition] = useState("bottom");
   const [linkBackgroundColor, setLinkBackgroundColor] = useState("rgba(0,0,0,0.4)");
   const [linkPadding, setLinkPadding] = useState(10);
 
@@ -50,10 +50,13 @@ export default function Results() {
   const [bgImage, setBgImage] = useState(null);
   const [bgVideo, setBgVideo] = useState("");
 
-  // Toggle for the style control panel dropdown
+  // Theme preset selection
+  const [selectedTheme, setSelectedTheme] = useState("");
+
+  // Toggle for style control panel dropdown
   const [panelOpen, setPanelOpen] = useState(false);
 
-  // ----- Fetch Search Results -----
+  // --- Fetch Search Results ---
   useEffect(() => {
     if (query) {
       fetchSearchResults(query);
@@ -73,7 +76,7 @@ export default function Results() {
       } else if (!data.items || data.items.length === 0) {
         setError("No results found.");
       } else {
-        // Only include items with an image and remove duplicates (by image link)
+        // Filter: only include items with an image & remove duplicate image links
         const seen = new Set();
         const uniqueResults = data.items.filter((item) => {
           if (!item.image || !item.link) return false;
@@ -90,7 +93,7 @@ export default function Results() {
     setLoading(false);
   };
 
-  // ----- Background Image Upload Handler -----
+  // --- Background Image Upload Handler ---
   const handleBgImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -98,7 +101,7 @@ export default function Results() {
     }
   };
 
-  // ----- YouTube Background Embed Functions -----
+  // --- YouTube Background Embed Functions ---
   function parseYouTubeUrl(url) {
     if (!url) return null;
     try {
@@ -123,7 +126,78 @@ export default function Results() {
   }
   const embedUrl = getYouTubeEmbedUrl(bgVideo);
 
-  // ----- Dynamic Styles -----
+  // --- Theme Preset Function ---
+  function applyTheme(theme) {
+    if (theme === "Minimal") {
+      setCardBorderWidth(0);
+      setCardBorderRadius(0);
+      setLinkFontFamily("Arial, sans-serif");
+      setLinkFontWeight("400");
+      setLinkFontColor("#ffffff");
+      setLinkFontSize(14);
+      setLinkBackgroundColor("rgba(0,0,0,0.4)");
+      setBgColor("#111111");
+      setBgGradient("");
+    } else if (theme === "Vibrant") {
+      setCardBorderWidth(2);
+      setCardBorderRadius(8);
+      setLinkFontFamily("'Helvetica Neue', sans-serif");
+      setLinkFontWeight("600");
+      setLinkFontColor("#ff4081");
+      setLinkFontSize(16);
+      setLinkBackgroundColor("rgba(0,0,0,0.5)");
+      setBgColor("#000000");
+      setBgGradient("linear-gradient(45deg, #ff6b6b, #f06595)");
+    } else if (theme === "Elegant") {
+      setCardBorderWidth(1);
+      setCardBorderRadius(4);
+      setLinkFontFamily("'Times New Roman', serif");
+      setLinkFontWeight("400");
+      setLinkFontColor("#333333");
+      setLinkFontSize(15);
+      setLinkBackgroundColor("rgba(255,255,255,0.7)");
+      setBgColor("#f7f7f7");
+      setBgGradient("");
+    } else if (theme === "Neon") {
+      setCardBorderWidth(2);
+      setCardBorderRadius(0);
+      setLinkFontFamily("Arial, sans-serif");
+      setLinkFontWeight("700");
+      setLinkFontColor("#39ff14");
+      setLinkFontSize(18);
+      setLinkBackgroundColor("rgba(0,0,0,0.7)");
+      setBgColor("#000000");
+      setBgGradient("linear-gradient(45deg, #ff00ff, #00ffff)");
+    } else if (theme === "Nature") {
+      setCardBorderWidth(1);
+      setCardBorderRadius(4);
+      setLinkFontFamily("Verdana, sans-serif");
+      setLinkFontWeight("400");
+      setLinkFontColor("#2e7d32");
+      setLinkFontSize(15);
+      setLinkBackgroundColor("rgba(255,255,255,0.6)");
+      setBgColor("#e8f5e9");
+      setBgGradient("");
+    } else {
+      // Default/reset theme
+      setCardBorderWidth(0);
+      setCardBorderRadius(0);
+      setLinkFontFamily("Arial, sans-serif");
+      setLinkFontWeight("400");
+      setLinkFontColor("#ffffff");
+      setLinkFontSize(14);
+      setLinkBackgroundColor("rgba(0,0,0,0.4)");
+      setBgColor("#111111");
+      setBgGradient("");
+    }
+  }
+
+  // When theme preset changes, apply it
+  useEffect(() => {
+    applyTheme(selectedTheme);
+  }, [selectedTheme]);
+
+  // --- Dynamic Styles ---
 
   // Full‑page background style
   const backgroundStyle = {
@@ -137,13 +211,14 @@ export default function Results() {
     backgroundRepeat: "no-repeat",
     backgroundPosition: "center",
     minHeight: "100vh",
-    paddingTop: "70px", // leave room for the top‑left search input
+    paddingTop: "70px", // leave room for top‑left search input
   };
 
-  // Container style:
-  // For "masonry-vertical", use CSS columns (staggered layout) that become 1 column on mobile;
-  // For other layouts, use grid or flex.
-  let containerStyle = {};
+  // Container style for results:
+  // For "masonry-vertical", use CSS columns (1 column on mobile, 3 on desktop);
+  // For "simple-grid", use grid;
+  // For "masonry-horizontal", use flex.
+  let containerStyle;
   if (gridLayout === "masonry-vertical") {
     containerStyle = {
       columnCount: isMobile ? 1 : 3,
@@ -167,8 +242,7 @@ export default function Results() {
     };
   }
 
-  // Card style:
-  // For masonry vertical, we do not force a height so images retain their natural aspect ratio.
+  // Card style – for masonry vertical, we let images retain natural aspect ratio.
   const cardStyle = {
     position: "relative",
     overflow: "hidden",
@@ -185,7 +259,7 @@ export default function Results() {
     cursor: "default",
   };
 
-  // Overlay style for link text and (potentially) action icons
+  // Overlay style for link text and action icons
   const overlayDivStyle = {
     position: "absolute",
     left: 0,
@@ -208,7 +282,7 @@ export default function Results() {
     zIndex: 10,
   };
 
-  // Helper: get favicon URL via Google's service
+  // Helper: get favicon URL using Google's service
   const getFaviconUrl = (url) => {
     try {
       const { hostname } = new URL(url);
@@ -257,7 +331,7 @@ export default function Results() {
         />
       </div>
 
-      {/* Style Control Panel Dropdown (Gear Icon at Top-Right) */}
+      {/* Style Control Panel Dropdown Toggle (Gear Icon at Top-Right) */}
       <div style={{ position: "absolute", top: "10px", right: "10px", zIndex: 50 }}>
         <button
           onClick={() => setPanelOpen(!panelOpen)}
@@ -303,6 +377,35 @@ export default function Results() {
             <h3 style={{ fontSize: "18px", fontWeight: "bold", marginBottom: "10px" }}>
               Customize View
             </h3>
+
+            {/* --- Theme Presets --- */}
+            <div style={{ marginBottom: "10px" }}>
+              <label style={{ fontSize: "14px", marginBottom: "4px", display: "block" }}>
+                Theme Presets:
+              </label>
+              <select
+                value={selectedTheme}
+                onChange={(e) => {
+                  setSelectedTheme(e.target.value);
+                  applyTheme(e.target.value);
+                }}
+                style={{
+                  width: "100%",
+                  padding: "6px",
+                  fontSize: "14px",
+                  border: "1px solid #ccc",
+                  borderRadius: "4px",
+                }}
+              >
+                <option value="">Default</option>
+                <option value="Minimal">Minimal</option>
+                <option value="Vibrant">Vibrant</option>
+                <option value="Elegant">Elegant</option>
+                <option value="Neon">Neon</option>
+                <option value="Nature">Nature</option>
+              </select>
+            </div>
+
             {/* --- Grid Layout & Dimensions --- */}
             <div style={{ marginBottom: "10px" }}>
               <label style={{ fontSize: "14px", marginBottom: "4px", display: "block" }}>
@@ -390,7 +493,7 @@ export default function Results() {
                 style={{ width: "100%", height: "30px", padding: "0" }}
               />
             </div>
-            {/* --- Link Text Styling --- */}
+            {/* --- Link Text & Content Styling --- */}
             <div style={{ marginBottom: "10px" }}>
               <label style={{ fontSize: "14px", marginBottom: "4px", display: "block" }}>
                 Font Family:
@@ -505,9 +608,7 @@ export default function Results() {
             </div>
             {/* --- Full‑Page Background Controls --- */}
             <div style={{ marginBottom: "10px" }}>
-              <h4 style={{ fontSize: "16px", fontWeight: "bold", marginBottom: "6px" }}>
-                Background
-              </h4>
+              <h4 style={{ fontSize: "16px", fontWeight: "bold", marginBottom: "6px" }}>Background</h4>
               <div style={{ marginBottom: "10px" }}>
                 <label style={{ fontSize: "14px", marginBottom: "4px", display: "block" }}>
                   Background Color:
@@ -612,14 +713,9 @@ export default function Results() {
               </div>
               {/* Action Icons: Edit, Delete, Move */}
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                {/* Edit Icon (stub modal later) */}
                 <button
                   onClick={() => console.log("Edit card", index)}
-                  style={{
-                    background: "transparent",
-                    border: "none",
-                    cursor: "pointer",
-                  }}
+                  style={{ background: "transparent", border: "none", cursor: "pointer" }}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -636,18 +732,13 @@ export default function Results() {
                     />
                   </svg>
                 </button>
-                {/* Delete Icon */}
                 <button
                   onClick={() => {
                     const updated = [...searchResults];
                     updated.splice(index, 1);
                     setSearchResults(updated);
                   }}
-                  style={{
-                    background: "transparent",
-                    border: "none",
-                    cursor: "pointer",
-                  }}
+                  style={{ background: "transparent", border: "none", cursor: "pointer" }}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -664,7 +755,6 @@ export default function Results() {
                     />
                   </svg>
                 </button>
-                {/* Move Icon (indicates draggable) */}
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
@@ -691,4 +781,23 @@ export default function Results() {
       </div>
     </div>
   );
+}
+
+function applyTheme(theme) {
+  // Update style states based on the chosen theme preset
+  if (theme === "Minimal") {
+    // Minimal: default no border, basic dark theme
+    // (Reset to defaults)
+    // These setters must be available via closures in the component—
+    // In this example, useEffect above calls applyTheme when selectedTheme changes.
+  } else if (theme === "Vibrant") {
+    // Vibrant theme preset
+  } else if (theme === "Elegant") {
+    // Elegant theme preset
+  } else if (theme === "Neon") {
+    // Neon theme preset
+  } else if (theme === "Nature") {
+    // Nature theme preset
+  }
+  // For brevity in this snippet, the actual setter calls are handled within the component's useEffect.
 }
