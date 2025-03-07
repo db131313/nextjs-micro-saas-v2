@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 
-// Your API keys
+// Your API keys (use the ones from our previous chats)
 const API_KEY = "AIzaSyDlc54LBF2pEDWQiC7JUG7kB5PaFsoytAE";
 const SEARCH_ENGINE_ID = "615b8aae2d40343b8";
 
@@ -9,12 +9,12 @@ export default function Results() {
   const router = useRouter();
   const { query } = router.query;
 
-  // --- Search State ---
+  // ----- Search State -----
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // --- Mobile Detection ---
+  // ----- Mobile Detection (viewport < 700px) -----
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 700);
@@ -23,13 +23,14 @@ export default function Results() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // --- Style Control Panel States ---
-  // Grid Layout: "masonry-vertical", "simple-grid", "masonry-horizontal"
+  // ----- Style Control Panel States -----
+  // Grid layout: "masonry-vertical", "simple-grid", "masonry-horizontal"
   const [gridLayout, setGridLayout] = useState("masonry-vertical");
-  // For non‑vertical layouts
+  // For layouts that use fixed dimensions:
   const [linkCardWidth, setLinkCardWidth] = useState(250);
+  const [linkCardHeight, setLinkCardHeight] = useState(250);
   const [gridGap, setGridGap] = useState(10);
-  // Default theme: no border and no border radius
+  // Default theme: no border style (0 border width and border radius)
   const [cardBorderRadius, setCardBorderRadius] = useState(0);
   const [cardBorderWidth, setCardBorderWidth] = useState(0);
   const [cardBorderColor, setCardBorderColor] = useState("#d1d5db");
@@ -39,20 +40,20 @@ export default function Results() {
   const [linkFontWeight, setLinkFontWeight] = useState("400");
   const [linkFontColor, setLinkFontColor] = useState("#ffffff");
   const [linkFontSize, setLinkFontSize] = useState(14);
-  const [linkTextPosition, setLinkTextPosition] = useState("bottom");
+  const [linkTextPosition, setLinkTextPosition] = useState("bottom"); // top, middle, or bottom
   const [linkBackgroundColor, setLinkBackgroundColor] = useState("rgba(0,0,0,0.4)");
   const [linkPadding, setLinkPadding] = useState(10);
 
-  // Full-page background styling
+  // Full‑page background styling
   const [bgColor, setBgColor] = useState("#111111");
   const [bgGradient, setBgGradient] = useState("");
   const [bgImage, setBgImage] = useState(null);
   const [bgVideo, setBgVideo] = useState("");
 
-  // Toggle for style control panel dropdown
+  // Toggle for the style control panel dropdown
   const [panelOpen, setPanelOpen] = useState(false);
 
-  // --- Fetch Search Results ---
+  // ----- Fetch Search Results -----
   useEffect(() => {
     if (query) {
       fetchSearchResults(query);
@@ -72,7 +73,7 @@ export default function Results() {
       } else if (!data.items || data.items.length === 0) {
         setError("No results found.");
       } else {
-        // Filter: Only include items with an image & remove duplicate image links
+        // Only include items with an image and remove duplicates (by image link)
         const seen = new Set();
         const uniqueResults = data.items.filter((item) => {
           if (!item.image || !item.link) return false;
@@ -89,7 +90,7 @@ export default function Results() {
     setLoading(false);
   };
 
-  // --- Background Image Upload Handler ---
+  // ----- Background Image Upload Handler -----
   const handleBgImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -97,7 +98,7 @@ export default function Results() {
     }
   };
 
-  // --- YouTube Background Embed ---
+  // ----- YouTube Background Embed Functions -----
   function parseYouTubeUrl(url) {
     if (!url) return null;
     try {
@@ -122,9 +123,9 @@ export default function Results() {
   }
   const embedUrl = getYouTubeEmbedUrl(bgVideo);
 
-  // --- Dynamic Styles ---
+  // ----- Dynamic Styles -----
 
-  // Full-page background style
+  // Full‑page background style
   const backgroundStyle = {
     backgroundColor: bgColor,
     backgroundImage: bgGradient
@@ -136,30 +137,38 @@ export default function Results() {
     backgroundRepeat: "no-repeat",
     backgroundPosition: "center",
     minHeight: "100vh",
-    paddingTop: "70px", // leave room for top-left search input
+    paddingTop: "70px", // leave room for the top‑left search input
   };
 
-  // Container style for masonry-vertical layout using CSS columns.
-  // On mobile, force one column; otherwise, three columns.
-  const containerStyle =
-    gridLayout === "masonry-vertical"
-      ? { columnCount: isMobile ? 1 : 3, columnGap: `${gridGap}px`, width: "100%" }
-      : gridLayout === "simple-grid"
-      ? {
-          display: "grid",
-          gridTemplateColumns: `repeat(auto-fill, minmax(${linkCardWidth}px, 1fr))`,
-          gap: `${gridGap}px`,
-          width: "100%",
-        }
-      : {
-          display: "flex",
-          flexWrap: "nowrap",
-          overflowX: "auto",
-          gap: `${gridGap}px`,
-          width: "100%",
-        };
+  // Container style:
+  // For "masonry-vertical", use CSS columns (staggered layout) that become 1 column on mobile;
+  // For other layouts, use grid or flex.
+  let containerStyle = {};
+  if (gridLayout === "masonry-vertical") {
+    containerStyle = {
+      columnCount: isMobile ? 1 : 3,
+      columnGap: `${gridGap}px`,
+      width: "100%",
+    };
+  } else if (gridLayout === "simple-grid") {
+    containerStyle = {
+      display: "grid",
+      gridTemplateColumns: `repeat(auto-fill, minmax(${linkCardWidth}px, 1fr))`,
+      gap: `${gridGap}px`,
+      width: "100%",
+    };
+  } else if (gridLayout === "masonry-horizontal") {
+    containerStyle = {
+      display: "flex",
+      flexWrap: "nowrap",
+      overflowX: "auto",
+      gap: `${gridGap}px`,
+      width: "100%",
+    };
+  }
 
-  // Default card style: for masonry, let images retain natural aspect ratio.
+  // Card style:
+  // For masonry vertical, we do not force a height so images retain their natural aspect ratio.
   const cardStyle = {
     position: "relative",
     overflow: "hidden",
@@ -176,7 +185,7 @@ export default function Results() {
     cursor: "default",
   };
 
-  // Overlay style for link text (and later action icons if desired)
+  // Overlay style for link text and (potentially) action icons
   const overlayDivStyle = {
     position: "absolute",
     left: 0,
@@ -199,7 +208,7 @@ export default function Results() {
     zIndex: 10,
   };
 
-  // Helper: get favicon using Google's service
+  // Helper: get favicon URL via Google's service
   const getFaviconUrl = (url) => {
     try {
       const { hostname } = new URL(url);
@@ -226,7 +235,7 @@ export default function Results() {
         </div>
       )}
 
-      {/* Search Input in Top-Left */}
+      {/* Search Input (Top-Left) */}
       <div style={{ position: "absolute", top: "10px", left: "10px", zIndex: 50 }}>
         <input
           type="text"
@@ -248,7 +257,7 @@ export default function Results() {
         />
       </div>
 
-      {/* Style Control Panel Dropdown Toggle (Gear Icon) at Top-Right */}
+      {/* Style Control Panel Dropdown (Gear Icon at Top-Right) */}
       <div style={{ position: "absolute", top: "10px", right: "10px", zIndex: 50 }}>
         <button
           onClick={() => setPanelOpen(!panelOpen)}
@@ -294,7 +303,7 @@ export default function Results() {
             <h3 style={{ fontSize: "18px", fontWeight: "bold", marginBottom: "10px" }}>
               Customize View
             </h3>
-            {/* Grid Layout & Dimensions */}
+            {/* --- Grid Layout & Dimensions --- */}
             <div style={{ marginBottom: "10px" }}>
               <label style={{ fontSize: "14px", marginBottom: "4px", display: "block" }}>
                 Grid Layout:
@@ -343,7 +352,7 @@ export default function Results() {
                 style={{ width: "100%" }}
               />
             </div>
-            {/* Border & Card Styling */}
+            {/* --- Card Border Styling --- */}
             <div style={{ marginBottom: "10px" }}>
               <label style={{ fontSize: "14px", marginBottom: "4px", display: "block" }}>
                 Border Radius: {cardBorderRadius}px
@@ -381,7 +390,7 @@ export default function Results() {
                 style={{ width: "100%", height: "30px", padding: "0" }}
               />
             </div>
-            {/* Link Text & Content Styling */}
+            {/* --- Link Text Styling --- */}
             <div style={{ marginBottom: "10px" }}>
               <label style={{ fontSize: "14px", marginBottom: "4px", display: "block" }}>
                 Font Family:
@@ -494,9 +503,11 @@ export default function Results() {
                 style={{ width: "100%" }}
               />
             </div>
-            {/* Full-Page Background Controls */}
+            {/* --- Full‑Page Background Controls --- */}
             <div style={{ marginBottom: "10px" }}>
-              <h4 style={{ fontSize: "16px", fontWeight: "bold", marginBottom: "6px" }}>Background</h4>
+              <h4 style={{ fontSize: "16px", fontWeight: "bold", marginBottom: "6px" }}>
+                Background
+              </h4>
               <div style={{ marginBottom: "10px" }}>
                 <label style={{ fontSize: "14px", marginBottom: "4px", display: "block" }}>
                   Background Color:
@@ -565,7 +576,7 @@ export default function Results() {
         )}
       </div>
 
-      {/* Masonry / Grid Container */}
+      {/* Masonry / Grid Container for Results */}
       <div style={containerStyle} className="w-full">
         {loading && <p style={{ color: "#aaa", textAlign: "center" }}>Loading...</p>}
         {error && <p style={{ color: "red", textAlign: "center" }}>{error}</p>}
@@ -598,6 +609,81 @@ export default function Results() {
                 >
                   {item.title}
                 </span>
+              </div>
+              {/* Action Icons: Edit, Delete, Move */}
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                {/* Edit Icon (stub modal later) */}
+                <button
+                  onClick={() => console.log("Edit card", index)}
+                  style={{
+                    background: "transparent",
+                    border: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth="2"
+                    stroke="currentColor"
+                    style={{ width: "20px", height: "20px" }}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M16.862 2.487a2.25 2.25 0 113.182 3.182L7.136 18.578a4.5 4.5 0 01-1.892 1.131l-2.835.945.945-2.835a4.5 4.5 0 011.131-1.892l12.377-12.44z"
+                    />
+                  </svg>
+                </button>
+                {/* Delete Icon */}
+                <button
+                  onClick={() => {
+                    const updated = [...searchResults];
+                    updated.splice(index, 1);
+                    setSearchResults(updated);
+                  }}
+                  style={{
+                    background: "transparent",
+                    border: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth="2"
+                    stroke="currentColor"
+                    style={{ width: "20px", height: "20px", color: "red" }}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M9.75 9.75l.45 8.25m4.5-8.25l-.45 8.25M6.75 5.25h10.5"
+                    />
+                  </svg>
+                </button>
+                {/* Move Icon (indicates draggable) */}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth="2"
+                  stroke="currentColor"
+                  style={{ width: "20px", height: "20px", cursor: "move" }}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M9 4.5V3.75a.75.75 0 111.5 0v.75h3V3.75a.75.75 0 111.5 0v.75h1.75a2.25 2.25 0 012.25 2.25v12a2.25 2.25 0 01-2.25 2.25H7.25a2.25 2.25 0 01-2.25-2.25v-12a2.25 2.25 0 012.25-2.25H9z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M9 8.25h6m-6 3h6m-6 3h6"
+                  />
+                </svg>
               </div>
             </div>
           </div>
