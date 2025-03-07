@@ -546,7 +546,7 @@ export default function Results() {
         </div>
 
         {/* Header & Search Input */}
-        <h1 className="text-3xl font-bold mb-4">Search Results</h1>
+
         <input
           type="text"
           placeholder="Search again..."
